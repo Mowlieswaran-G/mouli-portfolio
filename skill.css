@@ -1,4 +1,4 @@
-/* RESET */
+
 * {
     margin: 0;
     padding: 0;
@@ -6,13 +6,13 @@
     font-family: Arial, sans-serif;
 }
 
-/* BODY */
+
 body {
     background-color: #000;
     color: white;
 }
 
-/* NAVBAR */
+
 nav {
     display: flex;
     justify-content: space-between;
@@ -46,7 +46,7 @@ nav ul li a:hover {
     color: #b86bff;
 }
 
-/* SKILLS SECTION */
+
 .skills {
     padding: 80px;
     max-width: 700px;
@@ -62,7 +62,7 @@ nav ul li a:hover {
     color: #b86bff;
 }
 
-/* SKILL BAR */
+
 .skill {
     margin-bottom: 25px;
 }
@@ -72,7 +72,7 @@ nav ul li a:hover {
     font-size: 14px;
 }
 
-/* BAR */
+
 .bar {
     width: 100%;
     height: 10px;
@@ -80,14 +80,14 @@ nav ul li a:hover {
     border-radius: 5px;
 }
 
-/* FILL */
+
 .fill {
     height: 100%;
     background-color: #b86bff;
     border-radius: 5px;
 }
 
-/* SKILL LEVELS */
+
 .html { width: 70%; }
 .css  { width: 50%; }
 .js   { width: 10%; }
@@ -95,7 +95,7 @@ nav ul li a:hover {
 .py   { width: 50%; }
 
 
-/* Skill header (name + percentage) */
+
 .skill-header {
     display: flex;
     justify-content: space-between;
