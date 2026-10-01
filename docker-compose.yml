@@ -1,0 +1,28 @@
+services:
+  # Production container (Nginx serving optimized build on port 3000)
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mouli-portfolio
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+
+  # Development container with hot module replacement (HMR)
+  portfolio-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: mouli-portfolio-dev
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    profiles:
+      - dev
