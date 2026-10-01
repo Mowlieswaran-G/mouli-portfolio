@@ -1,17 +1,17 @@
 :root {
-  --bg-dark: #06080f;
-  --bg-card: rgba(12, 16, 26, 0.88);
-  --bg-card-hover: rgba(18, 25, 42, 0.95);
-  --border-subtle: rgba(255, 255, 255, 0.12);
-  --border-cyan: rgba(0, 240, 255, 0.4);
-  --border-cyan-bright: #00f0ff;
-  --accent-cyan: #00f0ff;
-  --accent-magenta: #ff007f;
-  --accent-amber: #ffb703;
+  --bg-dark: #475569;
+  --bg-card: rgba(30, 41, 59, 0.92);
+  --bg-card-hover: rgba(51, 65, 85, 0.96);
+  --border-subtle: rgba(255, 255, 255, 0.2);
+  --border-cyan: rgba(56, 189, 248, 0.5);
+  --border-cyan-bright: #38bdf8;
+  --accent-cyan: #38bdf8;
+  --accent-magenta: #818cf8;
+  --accent-amber: #f59e0b;
   --accent-emerald: #10b981;
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-dim: #94a3b8;
   --font-mono: 'JetBrains Mono', monospace;
   --font-heading: 'Space Grotesk', sans-serif;
   --font-sans: 'Inter', sans-serif;
@@ -48,7 +48,7 @@ html, body, #root {
   cursor: grabbing;
 }
 
-/* Scanline and Vignette Effect (Subtle sci-fi overlay with high visibility) */
+/* Subtle Cinematic Overlay (Preserves bright daylight clarity) */
 .screen-overlay {
   position: absolute;
   top: 0;
@@ -57,7 +57,7 @@ html, body, #root {
   height: 100%;
   pointer-events: none;
   z-index: 2;
-  background: radial-gradient(circle at center, transparent 75%, rgba(6, 12, 28, 0.35) 100%);
+  background: radial-gradient(circle at center, transparent 80%, rgba(30, 41, 59, 0.18) 100%);
 }
 
 .screen-overlay::after {
@@ -66,12 +66,12 @@ html, body, #root {
   inset: 0;
   background: repeating-linear-gradient(
     0deg,
-    rgba(0, 240, 255, 0.03) 0px,
-    rgba(0, 240, 255, 0.03) 1px,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 1px,
     transparent 1px,
     transparent 4px
   );
-  opacity: 0.2;
+  opacity: 0.1;
   pointer-events: none;
 }
 

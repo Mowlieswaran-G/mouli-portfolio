@@ -21,32 +21,32 @@ export class WorldBuilder {
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
     
-    // Luxury dark architectural granite/slate paver base
-    ctx.fillStyle = '#0a0f1d';
+    // Balanced medium slate stone base (combines light and dark values)
+    ctx.fillStyle = '#526071';
     ctx.fillRect(0, 0, 1024, 1024);
 
-    // Subtle stone tile grid (clean architectural pavers, not laser lines)
+    // Subtle stone tile grid (clean architectural pavers)
     const tileSize = 128;
     for (let x = 0; x < 1024; x += tileSize) {
       for (let y = 0; y < 1024; y += tileSize) {
         // Micro tonal variation between tiles
         const isAlt = ((x / tileSize) + (y / tileSize)) % 2 === 0;
-        ctx.fillStyle = isAlt ? 'rgba(255, 255, 255, 0.015)' : 'rgba(0, 0, 0, 0.08)';
+        ctx.fillStyle = isAlt ? '#5d6c7e' : '#4d5b6c';
         ctx.fillRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
 
-        // Architectural joint seams
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        // Architectural joint seams (bright light highlight seam)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, tileSize, tileSize);
 
-        // Delicate corner alignment ticks
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+        // Dark corner alignment ticks (dark contrast)
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
         ctx.fillRect(x - 2, y - 2, 4, 4);
       }
     }
 
-    // Refined primary wayfinding grid lines (every 4 tiles)
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+    // Refined wayfinding grid lines (light contrast lines)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
     ctx.lineWidth = 1.5;
     for (let i = 0; i <= 1024; i += tileSize * 4) {
       ctx.beginPath();
@@ -67,16 +67,16 @@ export class WorldBuilder {
     return texture;
   }
 
-  createNeonSignMesh(width, height, text, subtitle = '', accentColor = '#38bdf8', borderColor = 'rgba(56, 189, 248, 0.4)') {
+  createNeonSignMesh(width, height, text, subtitle = '', accentColor = '#38bdf8', borderColor = 'rgba(56, 189, 248, 0.5)') {
     const canvas = document.createElement('canvas');
     canvas.width = 2048;
     canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Premium architectural frosted glass base
+    // Dual-tone smoked glass base
     const grad = ctx.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
-    grad.addColorStop(1, 'rgba(11, 15, 25, 0.98)');
+    grad.addColorStop(0, 'rgba(30, 41, 59, 0.94)');
+    grad.addColorStop(1, 'rgba(15, 23, 42, 0.96)');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -108,7 +108,7 @@ export class WorldBuilder {
 
     // Crisp high-resolution title (Space Grotesk style)
     ctx.shadowColor = accentColor;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = 10;
     ctx.fillStyle = '#ffffff';
     ctx.font = '700 100px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
@@ -127,13 +127,13 @@ export class WorldBuilder {
       const pillY = 320;
 
       // Pill background
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
       ctx.beginPath();
       ctx.roundRect(pillX, pillY, pillW, pillH, 34);
       ctx.fill();
 
       // Pill border
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.lineWidth = 2;
       ctx.stroke();
 
@@ -144,7 +144,7 @@ export class WorldBuilder {
       ctx.fill();
 
       // Subtitle text
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'left';
       ctx.fillText(subtitle, pillX + 54, pillY + pillH / 2 + 2);
     }
@@ -158,33 +158,33 @@ export class WorldBuilder {
   initMaterials() {
     const gridTex = this.createGridTexture();
     this.materials = {
-      // Luxury dark architectural stone paver
+      // Medium architectural slate paver (Medium tone background)
       floorDark: new THREE.MeshStandardMaterial({
-        color: 0x111625,
+        color: 0x64748b, // Balanced slate grey
         map: gridTex,
-        roughness: 0.65,
-        metalness: 0.3
+        roughness: 0.55,
+        metalness: 0.2
       }),
-      // Polished basalt / dark quartz platform
+      // Luminous Platinum/White Marble Platform (Light contrast element!)
       plazaFloor: new THREE.MeshStandardMaterial({
-        color: 0x182032,
+        color: 0xf1f5f9, // Light clean stone
         map: gridTex,
-        roughness: 0.25,
-        metalness: 0.65
+        roughness: 0.2,
+        metalness: 0.35
       }),
-      // Architectural brushed titanium structural columns & beams
+      // Architectural off-white columns & structures (Light structural element)
       concreteWall: new THREE.MeshStandardMaterial({
-        color: 0x1e293b,
+        color: 0xe2e8f0, // Clean light architectural tone
         roughness: 0.3,
-        metalness: 0.75
+        metalness: 0.25
       }),
-      // High-grade matte dark alloy
+      // Contrasting dark slate/graphite frame (Dark contrast element)
       metalDark: new THREE.MeshStandardMaterial({
-        color: 0x0f172a,
+        color: 0x1e293b, // Dark contrast element
         roughness: 0.25,
         metalness: 0.85
       }),
-      // Architectural panoramic glass
+      // Architectural panoramic crystal glass
       glass: new THREE.MeshStandardMaterial({
         color: 0x38bdf8,
         transparent: true,
@@ -194,47 +194,47 @@ export class WorldBuilder {
       }),
       // Smoked architectural glass
       smokedGlass: new THREE.MeshStandardMaterial({
-        color: 0x0a0f1d,
+        color: 0x1e293b,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.55,
         roughness: 0.08,
-        metalness: 0.9
+        metalness: 0.85
       }),
       // Curated Architectural Accents (Clean, non-garish)
       neonCyan: new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
+        color: 0x0284c7,
         emissive: 0x0284c7,
-        emissiveIntensity: 1.4,
-        roughness: 0.2
-      }),
-      neonMagenta: new THREE.MeshStandardMaterial({
-        color: 0x818cf8,
-        emissive: 0x6366f1,
-        emissiveIntensity: 1.3,
-        roughness: 0.2
-      }),
-      neonAmber: new THREE.MeshStandardMaterial({
-        color: 0xfbbf24,
-        emissive: 0xd97706,
         emissiveIntensity: 1.2,
         roughness: 0.2
       }),
+      neonMagenta: new THREE.MeshStandardMaterial({
+        color: 0x6366f1,
+        emissive: 0x4f46e5,
+        emissiveIntensity: 1.1,
+        roughness: 0.2
+      }),
+      neonAmber: new THREE.MeshStandardMaterial({
+        color: 0xf59e0b,
+        emissive: 0xd97706,
+        emissiveIntensity: 1.1,
+        roughness: 0.2
+      }),
       neonEmerald: new THREE.MeshStandardMaterial({
-        color: 0x34d399,
+        color: 0x10b981,
         emissive: 0x059669,
-        emissiveIntensity: 1.3,
+        emissiveIntensity: 1.1,
         roughness: 0.2
       }),
       neonPurple: new THREE.MeshStandardMaterial({
-        color: 0xa78bfa,
+        color: 0x8b5cf6,
         emissive: 0x7c3aed,
-        emissiveIntensity: 1.3,
+        emissiveIntensity: 1.2,
         roughness: 0.2
       }),
       gold: new THREE.MeshStandardMaterial({
         color: 0xf59e0b,
         emissive: 0xb45309,
-        emissiveIntensity: 0.35,
+        emissiveIntensity: 0.3,
         metalness: 0.9,
         roughness: 0.2
       })
@@ -1298,12 +1298,12 @@ export class WorldBuilder {
   }
 
   buildDistantSkyline() {
-    // Prestigious global corporate tech metropolis in the distance
+    // Dual-tone corporate tech metropolis in the distance (mix of light and dark architecture)
     const buildingMaterials = [
-      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.25, metalness: 0.85 }),
-      new THREE.MeshStandardMaterial({ color: 0x131d33, roughness: 0.2, metalness: 0.9 }),
-      new THREE.MeshStandardMaterial({ color: 0x18243e, roughness: 0.3, metalness: 0.8 }),
-      new THREE.MeshStandardMaterial({ color: 0x0a101f, roughness: 0.35, metalness: 0.75 })
+      new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.2, metalness: 0.35 }), // Light architectural tower
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.25, metalness: 0.6 }),  // Medium silver-slate glass
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.75 }), // Dark slate tower
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.25, metalness: 0.85 }) // Deep obsidian tower
     ];
 
     const warmWindowMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });

@@ -27,9 +27,9 @@ export class GameEngine {
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x080e1c);
-    // Soft atmospheric distance fog for infinite horizon depth
-    this.scene.fog = new THREE.Fog(0x080e1c, 110, 320);
+    // Medium atmospheric silver-slate background & fog (harmonic combination of light and dark)
+    this.scene.background = new THREE.Color(0x94a3b8);
+    this.scene.fog = new THREE.Fog(0x94a3b8, 110, 360);
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
@@ -38,7 +38,7 @@ export class GameEngine {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.25; // Pristine, balanced professional dynamic range
+    this.renderer.toneMappingExposure = 1.2; // Balanced, natural dynamic range
 
     this.container.appendChild(this.renderer.domElement);
 
@@ -50,15 +50,15 @@ export class GameEngine {
       450
     );
 
-    // --- Atmospheric Cosmic Sky Dome ---
+    // --- Atmospheric Dual-Tone Sky Dome (Medium Slate Zenith -> Luminous Dawn Horizon) ---
     const skyGeo = new THREE.SphereGeometry(380, 32, 16);
     const skyMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       uniforms: {
-        topColor: { value: new THREE.Color(0x020612) },    // Deep midnight zenith
-        bottomColor: { value: new THREE.Color(0x0e172a) }, // Refined twilight horizon
-        offset: { value: 30 },
-        exponent: { value: 0.55 }
+        topColor: { value: new THREE.Color(0x273549) },    // Sophisticated medium-dark slate zenith
+        bottomColor: { value: new THREE.Color(0xdbe4ee) }, // Luminous warm silver-pearl horizon
+        offset: { value: 35 },
+        exponent: { value: 0.65 }
       },
       vertexShader: `
         varying vec3 vWorldPosition;
@@ -83,8 +83,8 @@ export class GameEngine {
     const sky = new THREE.Mesh(skyGeo, skyMat);
     this.scene.add(sky);
 
-    // Distant Architectural Stars / Constellation Dust in Upper Dome
-    const starCount = 350;
+    // Subtle ambient stardust shimmer in upper dome
+    const starCount = 200;
     const starGeo = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
@@ -94,7 +94,7 @@ export class GameEngine {
       const phi = Math.acos(2.0 * v - 1.0);
       const r = 360;
       const x = r * Math.sin(phi) * Math.cos(theta);
-      const y = Math.abs(r * Math.cos(phi)) + 15; // Only in upper hemisphere
+      const y = Math.abs(r * Math.cos(phi)) + 20;
       const z = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i * 3] = x;
       starPositions[i * 3 + 1] = y;
@@ -102,27 +102,27 @@ export class GameEngine {
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
     const starMat = new THREE.PointsMaterial({
-      color: 0x94a3b8,
-      size: 0.8,
+      color: 0xffffff,
+      size: 0.7,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.45,
       blending: THREE.AdditiveBlending
     });
     const starPoints = new THREE.Points(starGeo, starMat);
     this.scene.add(starPoints);
 
-    // --- Architectural Studio Lighting ---
-    // 1. Hemisphere Light: Soft crystalline skylight + warm graphite ground bounce
-    const hemiLight = new THREE.HemisphereLight(0xe2e8f0, 0x0f172a, 1.4);
+    // --- High-End Dual-Tone Studio Lighting ---
+    // 1. Hemisphere Light: Luminous sky daylight + warm architectural slate bounce
+    const hemiLight = new THREE.HemisphereLight(0xf8fafc, 0x64748b, 2.0);
     this.scene.add(hemiLight);
 
-    // 2. Ambient Fill: Crisp baseline visibility without harshness
-    const ambientLight = new THREE.AmbientLight(0xcfd8dc, 0.7);
+    // 2. Ambient Fill: Clear, radiant visibility across all architecture
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     this.scene.add(ambientLight);
 
-    // 3. Primary Key Directional Sunlight (Crisp architectural shadows)
-    this.moonLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    this.moonLight.position.set(40, 65, 30);
+    // 3. Primary Key Directional Sunlight (Crisp, realistic architectural sunbeams & shadows)
+    this.moonLight = new THREE.DirectionalLight(0xfffbeb, 2.8);
+    this.moonLight.position.set(45, 70, 35);
     this.moonLight.castShadow = true;
     this.moonLight.shadow.mapSize.width = 1024;
     this.moonLight.shadow.mapSize.height = 1024;
@@ -136,13 +136,13 @@ export class GameEngine {
     this.moonLight.shadow.bias = -0.0003;
     this.scene.add(this.moonLight);
 
-    // 4. Warm Architectural Accent Fill (Simulates premium exterior facade uplights)
-    const warmFill = new THREE.DirectionalLight(0xffedd5, 0.8);
-    warmFill.position.set(-30, 40, -30);
-    this.scene.add(warmFill);
+    // 4. Secondary Daylight Sky Fill (Soft sky-blue fill from opposite quadrant)
+    const skyFill = new THREE.DirectionalLight(0xbae6fd, 1.2);
+    skyFill.position.set(-35, 45, -35);
+    this.scene.add(skyFill);
 
-    // 5. Crystalline Edge Light (Refined silhouette definition)
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+    // 5. Warm Platinum Edge Light
+    const rimLight = new THREE.DirectionalLight(0xfef08a, 0.7);
     rimLight.position.set(0, 25, 35);
     this.scene.add(rimLight);
   }
