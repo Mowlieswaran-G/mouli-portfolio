@@ -1,13 +1,13 @@
 import React, { useRef, useEffect } from 'react';
 
 const SECTORS = [
-  { name: 'Spawn Hub', x: 0, z: 8, icon: '🏛️', color: '#00f0ff' },
-  { name: "Creator House", x: -28, z: 0, icon: '🏠', color: '#38bdf8' },
-  { name: 'Project Lab', x: 0, z: -35, icon: '💻', color: '#ff007f' },
-  { name: 'Skill Arena', x: 28, z: 0, icon: '✦', color: '#10b981' },
-  { name: 'Achievement Hall', x: 22, z: -28, icon: '🏆', color: '#ffb703' },
-  { name: 'Core Spire', x: 0, z: -70, icon: '⚡', color: '#a855f7' },
-  { name: 'Contact Station', x: 0, z: 32, icon: '🛰️', color: '#06b6d4' }
+  { name: 'Nexus Hub', x: 0, z: 8, icon: '🏛️', color: '#38bdf8' },
+  { name: 'Executive Studio', x: -28, z: 0, icon: '🏢', color: '#60a5fa' },
+  { name: 'Innovation Gallery', x: 0, z: -35, icon: '⚡', color: '#818cf8' },
+  { name: 'Technology Atrium', x: 28, z: 0, icon: '✦', color: '#34d399' },
+  { name: 'Hall of Milestones', x: 22, z: -28, icon: '🏆', color: '#fbbf24' },
+  { name: 'Quantum Spire', x: 0, z: -70, icon: '🔷', color: '#a78bfa' },
+  { name: 'Executive Comms', x: 0, z: 32, icon: '🛰️', color: '#38bdf8' }
 ];
 
 export const Minimap = ({ playerPos }) => {

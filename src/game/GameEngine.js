@@ -27,9 +27,9 @@ export class GameEngine {
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a1226);
-    // Soft atmospheric distance fog (leaves near and midground crystal-clear)
-    this.scene.fog = new THREE.Fog(0x0a1226, 85, 270);
+    this.scene.background = new THREE.Color(0x080e1c);
+    // Soft atmospheric distance fog for infinite horizon depth
+    this.scene.fog = new THREE.Fog(0x080e1c, 110, 320);
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", alpha: false });
@@ -38,7 +38,7 @@ export class GameEngine {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.35; // Luminous, high-contrast dynamic range
+    this.renderer.toneMappingExposure = 1.25; // Pristine, balanced professional dynamic range
 
     this.container.appendChild(this.renderer.domElement);
 
@@ -47,42 +47,103 @@ export class GameEngine {
       60,
       this.container.clientWidth / this.container.clientHeight,
       0.1,
-      400
+      450
     );
 
-    // --- Multi-Source Studio Game Lighting (Eliminates all dark silhouettes) ---
-    // 1. Hemisphere Light: Electric cyan sky from above, warm indigo bounce from ground
-    const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x1e1b4b, 1.8);
+    // --- Atmospheric Cosmic Sky Dome ---
+    const skyGeo = new THREE.SphereGeometry(380, 32, 16);
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        topColor: { value: new THREE.Color(0x020612) },    // Deep midnight zenith
+        bottomColor: { value: new THREE.Color(0x0e172a) }, // Refined twilight horizon
+        offset: { value: 30 },
+        exponent: { value: 0.55 }
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float offset;
+        uniform float exponent;
+        varying vec3 vWorldPosition;
+        void main() {
+          float h = normalize(vWorldPosition + offset).y;
+          gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
+        }
+      `
+    });
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    this.scene.add(sky);
+
+    // Distant Architectural Stars / Constellation Dust in Upper Dome
+    const starCount = 350;
+    const starGeo = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 360;
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = Math.abs(r * Math.cos(phi)) + 15; // Only in upper hemisphere
+      const z = r * Math.sin(phi) * Math.sin(theta);
+      starPositions[i * 3] = x;
+      starPositions[i * 3 + 1] = y;
+      starPositions[i * 3 + 2] = z;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0x94a3b8,
+      size: 0.8,
+      transparent: true,
+      opacity: 0.65,
+      blending: THREE.AdditiveBlending
+    });
+    const starPoints = new THREE.Points(starGeo, starMat);
+    this.scene.add(starPoints);
+
+    // --- Architectural Studio Lighting ---
+    // 1. Hemisphere Light: Soft crystalline skylight + warm graphite ground bounce
+    const hemiLight = new THREE.HemisphereLight(0xe2e8f0, 0x0f172a, 1.4);
     this.scene.add(hemiLight);
 
-    // 2. Ambient Fill: Raises baseline visibility so all geometry details pop
-    const ambientLight = new THREE.AmbientLight(0x93c5fd, 0.85);
+    // 2. Ambient Fill: Crisp baseline visibility without harshness
+    const ambientLight = new THREE.AmbientLight(0xcfd8dc, 0.7);
     this.scene.add(ambientLight);
 
-    // 3. Primary Directional Key Sunlight (Crisp, clean shadows)
-    this.moonLight = new THREE.DirectionalLight(0xffffff, 2.2);
-    this.moonLight.position.set(30, 55, 25);
+    // 3. Primary Key Directional Sunlight (Crisp architectural shadows)
+    this.moonLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    this.moonLight.position.set(40, 65, 30);
     this.moonLight.castShadow = true;
     this.moonLight.shadow.mapSize.width = 1024;
     this.moonLight.shadow.mapSize.height = 1024;
     this.moonLight.shadow.camera.near = 10;
-    this.moonLight.shadow.camera.far = 160;
-    const d = 55;
+    this.moonLight.shadow.camera.far = 180;
+    const d = 60;
     this.moonLight.shadow.camera.left = -d;
     this.moonLight.shadow.camera.right = d;
     this.moonLight.shadow.camera.top = d;
     this.moonLight.shadow.camera.bottom = -d;
-    this.moonLight.shadow.bias = -0.0004;
+    this.moonLight.shadow.bias = -0.0003;
     this.scene.add(this.moonLight);
 
-    // 4. Secondary Fill Light (Opposite quadrant to illuminate building & character back sides)
-    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
-    fillLight.position.set(-25, 35, -25);
-    this.scene.add(fillLight);
+    // 4. Warm Architectural Accent Fill (Simulates premium exterior facade uplights)
+    const warmFill = new THREE.DirectionalLight(0xffedd5, 0.8);
+    warmFill.position.set(-30, 40, -30);
+    this.scene.add(warmFill);
 
-    // 5. Player Entrance Rim Light (Shines from camera quadrant to highlight character back silhouette)
-    const rimLight = new THREE.DirectionalLight(0xa78bfa, 1.1);
-    rimLight.position.set(0, 20, 30);
+    // 5. Crystalline Edge Light (Refined silhouette definition)
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.9);
+    rimLight.position.set(0, 25, 35);
     this.scene.add(rimLight);
   }
 

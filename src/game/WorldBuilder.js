@@ -17,94 +17,136 @@ export class WorldBuilder {
 
   createGridTexture() {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024;
+    canvas.height = 1024;
     const ctx = canvas.getContext('2d');
     
-    // Sleek cyber deep slate background
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 512, 512);
+    // Luxury dark architectural granite/slate paver base
+    ctx.fillStyle = '#0a0f1d';
+    ctx.fillRect(0, 0, 1024, 1024);
 
-    // Minor glowing cyan grid lines
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-    ctx.lineWidth = 2;
-    const step = 64;
-    for (let x = 0; x <= 512; x += step) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 512);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= 512; y += step) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(512, y);
-      ctx.stroke();
-    }
+    // Subtle stone tile grid (clean architectural pavers, not laser lines)
+    const tileSize = 128;
+    for (let x = 0; x < 1024; x += tileSize) {
+      for (let y = 0; y < 1024; y += tileSize) {
+        // Micro tonal variation between tiles
+        const isAlt = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+        ctx.fillStyle = isAlt ? 'rgba(255, 255, 255, 0.015)' : 'rgba(0, 0, 0, 0.08)';
+        ctx.fillRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
 
-    // Major cyber nexus lines (brighter accents)
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
-    ctx.lineWidth = 3;
-    for (let x = 0; x <= 512; x += step * 2) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, 512);
-      ctx.stroke();
-    }
-    for (let y = 0; y <= 512; y += step * 2) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(512, y);
-      ctx.stroke();
-    }
+        // Architectural joint seams
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, tileSize, tileSize);
 
-    // Luminous glowing intersection nodes
-    ctx.fillStyle = '#00f0ff';
-    ctx.shadowColor = '#00f0ff';
-    ctx.shadowBlur = 8;
-    for (let x = 0; x <= 512; x += step) {
-      for (let y = 0; y <= 512; y += step) {
+        // Delicate corner alignment ticks
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
         ctx.fillRect(x - 2, y - 2, 4, 4);
       }
+    }
+
+    // Refined primary wayfinding grid lines (every 4 tiles)
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i <= 1024; i += tileSize * 4) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i, 1024);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, i);
+      ctx.lineTo(1024, i);
+      ctx.stroke();
     }
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(40, 40);
+    texture.repeat.set(30, 30);
     return texture;
   }
 
-  createNeonSignMesh(width, height, text, subtitle = '', textColor = '#00f0ff', borderColor = 'rgba(0, 240, 255, 0.5)') {
+  createNeonSignMesh(width, height, text, subtitle = '', accentColor = '#38bdf8', borderColor = 'rgba(56, 189, 248, 0.4)') {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 256;
+    canvas.width = 2048;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
 
-    // Background
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    // Premium architectural frosted glass base
+    const grad = ctx.createLinearGradient(0, 0, 0, 512);
+    grad.addColorStop(0, 'rgba(15, 23, 42, 0.95)');
+    grad.addColorStop(1, 'rgba(11, 15, 25, 0.98)');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Outer cyber border
+    // Ultra-fine architectural beveled border
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
 
-    // Glowing Main Title
-    ctx.shadowColor = textColor;
-    ctx.shadowBlur = 28;
-    ctx.fillStyle = textColor;
-    ctx.font = 'bold 74px "Space Grotesk", sans-serif';
+    // Accent corner brackets
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 8;
+    const bracketLen = 40;
+    // Top-left
+    ctx.beginPath();
+    ctx.moveTo(8, 8 + bracketLen); ctx.lineTo(8, 8); ctx.lineTo(8 + bracketLen, 8);
+    ctx.stroke();
+    // Top-right
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - 8 - bracketLen, 8); ctx.lineTo(canvas.width - 8, 8); ctx.lineTo(canvas.width - 8, 8 + bracketLen);
+    ctx.stroke();
+    // Bottom-left
+    ctx.beginPath();
+    ctx.moveTo(8, canvas.height - 8 - bracketLen); ctx.lineTo(8, canvas.height - 8); ctx.lineTo(8 + bracketLen, canvas.height - 8);
+    ctx.stroke();
+    // Bottom-right
+    ctx.beginPath();
+    ctx.moveTo(canvas.width - 8 - bracketLen, canvas.height - 8); ctx.lineTo(canvas.width - 8, canvas.height - 8); ctx.lineTo(canvas.width - 8, canvas.height - 8 - bracketLen);
+    ctx.stroke();
+
+    // Crisp high-resolution title (Space Grotesk style)
+    ctx.shadowColor = accentColor;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 100px "Space Grotesk", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, canvas.width / 2, subtitle ? 95 : 128);
+    ctx.fillText(text, canvas.width / 2, subtitle ? 180 : 256);
 
-    // Subtitle
+    // Refined Subtitle Pill Badge
     if (subtitle) {
-      ctx.shadowBlur = 10;
-      ctx.font = '500 32px "JetBrains Mono", monospace';
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillText(subtitle, canvas.width / 2, 175);
+      ctx.shadowBlur = 0;
+      ctx.font = '600 42px "JetBrains Mono", monospace';
+      
+      const subTextWidth = ctx.measureText(subtitle).width;
+      const pillW = subTextWidth + 60;
+      const pillH = 68;
+      const pillX = (canvas.width - pillW) / 2;
+      const pillY = 320;
+
+      // Pill background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.beginPath();
+      ctx.roundRect(pillX, pillY, pillW, pillH, 34);
+      ctx.fill();
+
+      // Pill border
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Accent status dot
+      ctx.fillStyle = accentColor;
+      ctx.beginPath();
+      ctx.arc(pillX + 32, pillY + pillH / 2, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtitle text
+      ctx.fillStyle = '#e2e8f0';
+      ctx.textAlign = 'left';
+      ctx.fillText(subtitle, pillX + 54, pillY + pillH / 2 + 2);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -116,69 +158,83 @@ export class WorldBuilder {
   initMaterials() {
     const gridTex = this.createGridTexture();
     this.materials = {
+      // Luxury dark architectural stone paver
       floorDark: new THREE.MeshStandardMaterial({
-        color: 0x1a2744, // Vibrant deep cyber blue
+        color: 0x111625,
         map: gridTex,
-        roughness: 0.35,
-        metalness: 0.55
+        roughness: 0.65,
+        metalness: 0.3
       }),
+      // Polished basalt / dark quartz platform
       plazaFloor: new THREE.MeshStandardMaterial({
-        color: 0x243b66, // Luminous plaza platform
+        color: 0x182032,
         map: gridTex,
         roughness: 0.25,
         metalness: 0.65
       }),
+      // Architectural brushed titanium structural columns & beams
       concreteWall: new THREE.MeshStandardMaterial({
-        color: 0x334155, // Clean slate structure
-        roughness: 0.45,
-        metalness: 0.5
-      }),
-      metalDark: new THREE.MeshStandardMaterial({
-        color: 0x24324a, // Polished high-tech alloy
-        roughness: 0.25,
+        color: 0x1e293b,
+        roughness: 0.3,
         metalness: 0.75
       }),
+      // High-grade matte dark alloy
+      metalDark: new THREE.MeshStandardMaterial({
+        color: 0x0f172a,
+        roughness: 0.25,
+        metalness: 0.85
+      }),
+      // Architectural panoramic glass
       glass: new THREE.MeshStandardMaterial({
-        color: 0x00f0ff,
+        color: 0x38bdf8,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.35,
         roughness: 0.05,
         metalness: 0.95
       }),
+      // Smoked architectural glass
+      smokedGlass: new THREE.MeshStandardMaterial({
+        color: 0x0a0f1d,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.08,
+        metalness: 0.9
+      }),
+      // Curated Architectural Accents (Clean, non-garish)
       neonCyan: new THREE.MeshStandardMaterial({
-        color: 0x00f0ff,
-        emissive: 0x00f0ff,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
+        color: 0x38bdf8,
+        emissive: 0x0284c7,
+        emissiveIntensity: 1.4,
+        roughness: 0.2
       }),
       neonMagenta: new THREE.MeshStandardMaterial({
-        color: 0xff007f,
-        emissive: 0xff007f,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
+        color: 0x818cf8,
+        emissive: 0x6366f1,
+        emissiveIntensity: 1.3,
+        roughness: 0.2
       }),
       neonAmber: new THREE.MeshStandardMaterial({
-        color: 0xffb703,
-        emissive: 0xffb703,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
+        color: 0xfbbf24,
+        emissive: 0xd97706,
+        emissiveIntensity: 1.2,
+        roughness: 0.2
       }),
       neonEmerald: new THREE.MeshStandardMaterial({
-        color: 0x10b981,
-        emissive: 0x10b981,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
+        color: 0x34d399,
+        emissive: 0x059669,
+        emissiveIntensity: 1.3,
+        roughness: 0.2
       }),
       neonPurple: new THREE.MeshStandardMaterial({
-        color: 0xc084fc,
-        emissive: 0xa855f7,
-        emissiveIntensity: 1.8,
-        roughness: 0.1
+        color: 0xa78bfa,
+        emissive: 0x7c3aed,
+        emissiveIntensity: 1.3,
+        roughness: 0.2
       }),
       gold: new THREE.MeshStandardMaterial({
-        color: 0xffd700,
-        emissive: 0xffaa00,
-        emissiveIntensity: 0.5,
+        color: 0xf59e0b,
+        emissive: 0xb45309,
+        emissiveIntensity: 0.35,
         metalness: 0.9,
         roughness: 0.2
       })
@@ -237,181 +293,201 @@ export class WorldBuilder {
   }
 
   buildGroundAndSky() {
-    // 1. Massive Ground Plane
+    // 1. Massive Ground Plane (Dark luxury architectural pavers)
     const groundGeo = new THREE.PlaneGeometry(350, 350);
     groundGeo.rotateX(-Math.PI / 2);
     const groundMesh = new THREE.Mesh(groundGeo, this.materials.floorDark);
     groundMesh.receiveShadow = true;
     this.scene.add(groundMesh);
 
-    // 2. Central Plaza Hexagonal Inset
-    const plazaGeo = new THREE.CylinderGeometry(20, 20, 0.05, 6);
+    // 2. Central Plaza Circular Dais (Polished Dark Basalt / Quartz)
+    const plazaGeo = new THREE.CylinderGeometry(20, 20.4, 0.08, 48);
     const plazaMesh = new THREE.Mesh(plazaGeo, this.materials.plazaFloor);
-    plazaMesh.position.y = 0.02;
+    plazaMesh.position.y = 0.04;
     plazaMesh.receiveShadow = true;
     this.scene.add(plazaMesh);
 
-    // Glowing Hexagonal Border for Plaza
-    const plazaBorderGeo = new THREE.RingGeometry(19.8, 20.3, 6);
-    plazaBorderGeo.rotateX(-Math.PI / 2);
-    const plazaBorder = new THREE.Mesh(plazaBorderGeo, this.materials.neonCyan);
-    plazaBorder.position.y = 0.03;
-    this.scene.add(plazaBorder);
+    // Architectural Inlaid Perimeter Rings (Brushed Champagne Gold & Ice-Blue)
+    const plazaRingOuter = new THREE.Mesh(
+      new THREE.RingGeometry(19.8, 20.1, 48).rotateX(-Math.PI / 2),
+      this.materials.gold
+    );
+    plazaRingOuter.position.y = 0.085;
+    this.scene.add(plazaRingOuter);
 
-    // 3. Player Spawn Point Teleport Pad (Directly under starting player position (0, 0, 8))
-    const padGeo = new THREE.CircleGeometry(2.4, 32);
-    padGeo.rotateX(-Math.PI / 2);
+    const plazaRingInner = new THREE.Mesh(
+      new THREE.RingGeometry(14.8, 15.0, 48).rotateX(-Math.PI / 2),
+      this.materials.neonCyan
+    );
+    plazaRingInner.position.y = 0.085;
+    this.scene.add(plazaRingInner);
+
+    // 3. Player Spawn Point Teleport Plinth
+    const padGeo = new THREE.CylinderGeometry(2.4, 2.5, 0.06, 32);
     const padMesh = new THREE.Mesh(padGeo, new THREE.MeshStandardMaterial({
-      color: 0x1e294b,
+      color: 0x1e293b,
       roughness: 0.2,
       metalness: 0.8
     }));
-    padMesh.position.set(0, 0.03, 8);
+    padMesh.position.set(0, 0.05, 8);
     this.scene.add(padMesh);
 
-    // Outer & inner glowing cyan energy rings around spawn
-    const spawnRingOuter = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.38, 32).rotateX(-Math.PI / 2), this.materials.neonCyan);
-    spawnRingOuter.position.set(0, 0.035, 8);
-    this.scene.add(spawnRingOuter);
+    // Inlaid architectural lighting ring at spawn
+    const spawnRing = new THREE.Mesh(
+      new THREE.RingGeometry(2.1, 2.25, 32).rotateX(-Math.PI / 2),
+      this.materials.neonCyan
+    );
+    spawnRing.position.set(0, 0.085, 8);
+    this.scene.add(spawnRing);
 
-    const spawnRingInner = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.32, 32).rotateX(-Math.PI / 2), this.materials.neonMagenta);
-    spawnRingInner.position.set(0, 0.036, 8);
-    this.scene.add(spawnRingInner);
-
-    // Dedicated Spawn Celestial Spotlight (illuminates player brightly at launch)
-    const spawnSpot = new THREE.SpotLight(0x00f0ff, 5.0, 22, Math.PI / 3, 0.4, 1.2);
-    spawnSpot.position.set(0, 9, 8);
+    // Dedicated Architectural Spot Downlight for Spawn
+    const spawnSpot = new THREE.SpotLight(0xf8fafc, 4.5, 24, Math.PI / 3.5, 0.4, 1.2);
+    spawnSpot.position.set(0, 11, 8);
     spawnSpot.target.position.set(0, 0, 8);
     this.scene.add(spawnSpot);
     this.scene.add(spawnSpot.target);
 
-    // 4. Glowing Floor Conduits (connecting Spawn to all sectors)
+    // 4. Recessed Wayfinding Light Channels (connecting Spawn to all sectors)
     const conduitMat = this.materials.neonCyan;
 
     const makeConduit = (x1, z1, x2, z2) => {
       const length = Math.hypot(x2 - x1, z2 - z1);
       const angle = Math.atan2(x2 - x1, z2 - z1);
-      const geo = new THREE.PlaneGeometry(0.4, length);
+      const geo = new THREE.PlaneGeometry(0.25, length);
       geo.rotateX(-Math.PI / 2);
       const conduit = new THREE.Mesh(geo, conduitMat);
-      conduit.position.set((x1 + x2) / 2, 0.03, (z1 + z2) / 2);
+      conduit.position.set((x1 + x2) / 2, 0.082, (z1 + z2) / 2);
       conduit.rotation.y = angle;
       this.scene.add(conduit);
     };
 
-    // To House
+    // To Executive Studio
     makeConduit(0, 0, -26, 0);
-    // To Lab
+    // To Innovation Bay
     makeConduit(0, 0, 0, -32);
-    // To Skills
+    // To Technology Atrium
     makeConduit(0, 0, 26, 0);
-    // To Achievements
+    // To Hall of Milestones
     makeConduit(0, 0, 20, -26);
-    // To Contact
+    // To Executive Comms
     makeConduit(0, 0, 0, 30);
-    // Lab to Boss Core
+    // Lab to Quantum Spire
     makeConduit(0, -32, 0, -66);
   }
 
   buildSpawnPlaza() {
-    // Monumental Entrance Archway
-    const archMat = this.materials.metalDark;
-    this.createWall(-6, 4, 12, 1.2, 8, 1.2, archMat);
-    this.createWall(6, 4, 12, 1.2, 8, 1.2, archMat);
-    this.createWall(0, 8, 12, 13.2, 1.2, 1.2, archMat);
+    // Grand Minimalist Gateway (Brushed Titanium Twin Pylons with Glass Panels)
+    const pylonMat = this.materials.concreteWall;
+    this.createWall(-6.5, 4.5, 12, 1.2, 9, 1.2, pylonMat);
+    this.createWall(6.5, 4.5, 12, 1.2, 9, 1.2, pylonMat);
+    // Cantilevered overhead lintel
+    this.createWall(0, 8.8, 12, 14.4, 0.8, 1.4, pylonMat);
 
-    // Neon Pillars on Archway
-    const pillarLightL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 7.8, 1.22), this.materials.neonCyan);
-    pillarLightL.position.set(-5.4, 4, 12);
-    this.scene.add(pillarLightL);
+    // Vertical recessed architectural light blades
+    const lightBladeL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 8.5, 0.12), this.materials.neonCyan);
+    lightBladeL.position.set(-5.8, 4.5, 12.6);
+    this.scene.add(lightBladeL);
 
-    const pillarLightR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 7.8, 1.22), this.materials.neonCyan);
-    pillarLightR.position.set(5.4, 4, 12);
-    this.scene.add(pillarLightR);
+    const lightBladeR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 8.5, 0.12), this.materials.neonCyan);
+    lightBladeR.position.set(5.8, 4.5, 12.6);
+    this.scene.add(lightBladeR);
 
-    // Luminous Sign on Entrance Arch (Front & Back)
-    const archSignFront = this.createNeonSignMesh(11, 1.4, "M O U L I", "DEVELOPER • CREATOR • BUILDER", "#00f0ff");
-    archSignFront.position.set(0, 8, 12.65);
+    // Architectural Glass Sign on Gateway (Front & Back)
+    const archSignFront = this.createNeonSignMesh(12, 1.5, "MOULI NEXUS", "SYSTEMS ARCHITECTURE • FULL STACK • 3D", "#38bdf8");
+    archSignFront.position.set(0, 8.8, 12.75);
     this.scene.add(archSignFront);
 
-    const archSignBack = this.createNeonSignMesh(11, 1.4, "M O U L I", "PORTFOLIO NEXUS // 60 FPS", "#00f0ff");
-    archSignBack.position.set(0, 8, 11.35);
+    const archSignBack = this.createNeonSignMesh(12, 1.5, "MOULI NEXUS", "INNOVATION HEADQUARTERS // 60 FPS", "#38bdf8");
+    archSignBack.position.set(0, 8.8, 11.25);
     archSignBack.rotation.y = Math.PI;
     this.scene.add(archSignBack);
 
-    // Central Kinetic Monument / Obelisk
-    const obeliskGeo = new THREE.CylinderGeometry(0.5, 0.9, 4.5, 6);
-    const obeliskMesh = new THREE.Mesh(obeliskGeo, this.materials.metalDark);
-    obeliskMesh.position.set(0, 2.25, 0);
-    this.scene.add(obeliskMesh);
-    this.addCollider(new THREE.Box3(new THREE.Vector3(-1.2, 0, -1.2), new THREE.Vector3(1.2, 5, 1.2)));
+    // Central Kinetic Sculpture (Gyroscopic Orbital Monument)
+    const plinthGeo = new THREE.CylinderGeometry(0.8, 1.1, 1.2, 8);
+    const plinth = new THREE.Mesh(plinthGeo, this.materials.metalDark);
+    plinth.position.set(0, 0.6, 0);
+    this.scene.add(plinth);
+    this.addCollider(new THREE.Box3(new THREE.Vector3(-1.2, 0, -1.2), new THREE.Vector3(1.2, 4.5, 1.2)));
 
-    // Spinning Holographic Rings around obelisk
-    const ringGeo = new THREE.TorusGeometry(1.8, 0.05, 8, 32);
-    const ring1 = new THREE.Mesh(ringGeo, this.materials.neonCyan);
-    ring1.position.set(0, 2.5, 0);
+    // Orbital Rings
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.04, 12, 48), this.materials.gold);
+    ring1.position.set(0, 2.4, 0);
     this.scene.add(ring1);
 
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.04, 8, 32), this.materials.neonMagenta);
-    ring2.position.set(0, 2.5, 0);
-    ring2.rotation.x = Math.PI / 4;
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.035, 12, 48), this.materials.neonCyan);
+    ring2.position.set(0, 2.4, 0);
+    ring2.rotation.x = Math.PI / 3;
     this.scene.add(ring2);
+
+    const centerPrism = new THREE.Mesh(new THREE.OctahedronGeometry(0.35, 0), this.materials.neonMagenta);
+    centerPrism.position.set(0, 2.4, 0);
+    this.scene.add(centerPrism);
 
     this.animatedObjects.push({
       update: (dt) => {
-        ring1.rotation.y += dt * 0.8;
-        ring1.rotation.x += dt * 0.4;
-        ring2.rotation.y -= dt * 1.0;
-        ring2.rotation.z += dt * 0.5;
+        ring1.rotation.y += dt * 0.7;
+        ring1.rotation.x += dt * 0.3;
+        ring2.rotation.y -= dt * 0.9;
+        ring2.rotation.z += dt * 0.4;
+        centerPrism.rotation.y += dt * 1.2;
       }
     });
 
-    // Street Lamps with radiant high-power light sources
-    const lampPositions = [
+    // Architectural Light Bollards (Clean, modern exterior lighting columns)
+    const bollardPositions = [
       { x: -8, z: -8 },
       { x: 8, z: -8 },
       { x: -8, z: 8 },
       { x: 8, z: 8 }
     ];
 
-    lampPositions.forEach((pos) => {
-      const poleGeo = new THREE.CylinderGeometry(0.1, 0.12, 4.5, 8);
-      const pole = new THREE.Mesh(poleGeo, this.materials.metalDark);
-      pole.position.set(pos.x, 2.25, pos.z);
-      this.scene.add(pole);
+    bollardPositions.forEach((pos) => {
+      // Slender rectangular titanium column
+      const colGeo = new THREE.BoxGeometry(0.28, 2.8, 0.28);
+      const col = new THREE.Mesh(colGeo, this.materials.concreteWall);
+      col.position.set(pos.x, 1.4, pos.z);
+      this.scene.add(col);
 
-      const lampHeadGeo = new THREE.BoxGeometry(0.65, 0.3, 0.65);
-      const lampHead = new THREE.Mesh(lampHeadGeo, this.materials.neonCyan);
-      lampHead.position.set(pos.x, 4.5, pos.z);
-      this.scene.add(lampHead);
+      // Recessed LED illumination slit
+      const slitGeo = new THREE.BoxGeometry(0.12, 0.9, 0.3);
+      const slit = new THREE.Mesh(slitGeo, this.materials.neonCyan);
+      slit.position.set(pos.x, 2.2, pos.z);
+      this.scene.add(slit);
 
-      // High-intensity radiant pointlight
-      const light = new THREE.PointLight(0x38bdf8, 4.2, 22);
-      light.position.set(pos.x, 4.2, pos.z);
+      // Soft architectural downlight
+      const light = new THREE.PointLight(0xdbeafe, 2.8, 14);
+      light.position.set(pos.x, 2.4, pos.z);
       this.scene.add(light);
     });
 
-    // Plaza Navigational Signs
-    this.buildNavSign(-7, 0, "[<--] THE CREATOR'S HOUSE", 0x00f0ff, Math.PI / 2);
-    this.buildNavSign(0, -7, "[^^^] PROJECT LAB & CORE SPIRE", 0x00f0ff, 0);
-    this.buildNavSign(7, 0, "[-->] SKILL ARENA", 0x00f0ff, -Math.PI / 2);
-    this.buildNavSign(0, 7, "[v v] CONTACT TRANSMISSION", 0x00f0ff, Math.PI);
+    // Plaza Navigational Directory Signs
+    this.buildNavSign(-7, 0, "[<--] EXECUTIVE STUDIO", 0x38bdf8, Math.PI / 2);
+    this.buildNavSign(0, -7, "[^^^] INNOVATION BAY & CORE SPIRE", 0x38bdf8, 0);
+    this.buildNavSign(7, 0, "[-->] TECHNOLOGY ATRIUM", 0x38bdf8, -Math.PI / 2);
+    this.buildNavSign(0, 7, "[v v] EXECUTIVE COMMS", 0x38bdf8, Math.PI);
   }
 
   buildNavSign(x, z, text, colorHex, rotationY) {
-    const postGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.8, 6);
-    const post = new THREE.Mesh(postGeo, this.materials.metalDark);
+    const postGeo = new THREE.BoxGeometry(0.08, 1.8, 0.08);
+    const post = new THREE.Mesh(postGeo, this.materials.concreteWall);
     post.position.set(x, 0.9, z);
     this.scene.add(post);
 
-    const boardGeo = new THREE.BoxGeometry(2.4, 0.5, 0.08);
-    const board = new THREE.Mesh(boardGeo, new THREE.MeshStandardMaterial({ color: 0x0a0e17, metalness: 0.8 }));
+    const boardGeo = new THREE.BoxGeometry(2.6, 0.48, 0.06);
+    const board = new THREE.Mesh(boardGeo, new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      metalness: 0.8,
+      roughness: 0.2
+    }));
     board.position.set(x, 1.8, z);
     board.rotation.y = rotationY;
     this.scene.add(board);
 
-    const glowStripe = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.06, 0.09), new THREE.MeshBasicMaterial({ color: colorHex }));
-    glowStripe.position.set(x, 1.6, z);
+    const glowStripe = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 0.04, 0.08),
+      new THREE.MeshBasicMaterial({ color: colorHex })
+    );
+    glowStripe.position.set(x, 1.58, z);
     glowStripe.rotation.y = rotationY;
     this.scene.add(glowStripe);
   }
@@ -420,127 +496,148 @@ export class WorldBuilder {
     const hx = -28;
     const hz = 0;
 
-    // Outer Walls (Studio Room 14m x 12m, height 5m)
-    // Left wall
-    this.createWall(hx - 7, 2.5, hz, 0.6, 5, 12);
-    // Back wall
-    this.createWall(hx, 2.5, hz - 6, 14, 5, 0.6);
-    // Front wall (partially open for entrance)
-    this.createWall(hx - 4.5, 2.5, hz + 6, 5, 5, 0.6);
-    this.createWall(hx + 4.5, 2.5, hz + 6, 5, 5, 0.6);
-    // Right wall (entrance side, with door gap)
-    this.createWall(hx + 7, 2.5, hz - 3.5, 0.6, 5, 5);
-    this.createWall(hx + 7, 2.5, hz + 3.5, 0.6, 5, 5);
-
-    // Ceiling / Roof
-    const roofGeo = new THREE.BoxGeometry(14.8, 0.4, 12.8);
-    const roof = new THREE.Mesh(roofGeo, this.materials.metalDark);
-    roof.position.set(hx, 5.2, hz);
-    this.scene.add(roof);
-
-    // House Floor
-    const floorGeo = new THREE.BoxGeometry(13.6, 0.06, 11.6);
+    // --- The Architect's Executive Innovation Pavilion ---
+    // Floor: Polished luxury quartz platform
+    const floorGeo = new THREE.BoxGeometry(15.2, 0.08, 13.2);
     const houseFloor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({
-      color: 0x172033,
-      roughness: 0.4,
-      metalness: 0.6
+      color: 0x131a29,
+      roughness: 0.2,
+      metalness: 0.7
     }));
-    houseFloor.position.set(hx, 0.04, hz);
+    houseFloor.position.set(hx, 0.05, hz);
     this.scene.add(houseFloor);
 
-    // House Neon Sign above entrance
-    const signGeo = new THREE.BoxGeometry(5.8, 0.9, 0.2);
-    const signMesh = new THREE.Mesh(signGeo, this.materials.metalDark);
-    signMesh.position.set(hx + 7.1, 4.2, hz);
-    signMesh.rotation.y = -Math.PI / 2;
-    this.scene.add(signMesh);
+    // Polished gold rim around studio base
+    const studioRim = new THREE.Mesh(
+      new THREE.BoxGeometry(15.4, 0.04, 13.4),
+      this.materials.gold
+    );
+    studioRim.position.set(hx, 0.03, hz);
+    this.scene.add(studioRim);
 
-    const houseSign = this.createNeonSignMesh(5.6, 0.85, "THE CREATOR'S HOUSE", "MEET MOULI // NPC 01", "#38bdf8");
-    houseSign.position.set(hx + 7.22, 4.2, hz);
-    houseSign.rotation.y = -Math.PI / 2;
-    this.scene.add(houseSign);
+    // Architectural Slender Titanium Columns (Corners & Portico)
+    const colMat = this.materials.concreteWall;
+    const colCoords = [
+      { x: hx - 7.2, z: hz - 6.2 },
+      { x: hx + 7.2, z: hz - 6.2 },
+      { x: hx - 7.2, z: hz + 6.2 },
+      { x: hx + 7.2, z: hz + 6.2 },
+      { x: hx + 7.2, z: hz - 2.8 },
+      { x: hx + 7.2, z: hz + 2.8 }
+    ];
+    colCoords.forEach((p) => {
+      this.createWall(p.x, 2.6, p.z, 0.6, 5.2, 0.6, colMat);
+    });
 
-    // Interior Warm Spot Light
-    const houseLight = new THREE.PointLight(0xffecd2, 4.0, 16);
-    houseLight.position.set(hx, 4.0, hz);
-    this.scene.add(houseLight);
+    // Floor-to-Ceiling Smoked Architectural Glass Facade Walls
+    // Back wall
+    this.createWall(hx, 2.6, hz - 6.2, 14, 5.2, 0.2, this.materials.smokedGlass);
+    // Left wall
+    this.createWall(hx - 7.2, 2.6, hz, 0.2, 5.2, 12, this.materials.smokedGlass);
+    // Front wall
+    this.createWall(hx, 2.6, hz + 6.2, 14, 5.2, 0.2, this.materials.smokedGlass);
+    // Entrance wall (East side, partially open with glass flanking)
+    this.createWall(hx + 7.2, 2.6, hz - 4.5, 0.2, 5.2, 3, this.materials.smokedGlass);
+    this.createWall(hx + 7.2, 2.6, hz + 4.5, 0.2, 5.2, 3, this.materials.smokedGlass);
 
-    // Work Desk
-    const deskGeo = new THREE.BoxGeometry(3.2, 0.1, 1.4);
-    const deskMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.3 });
+    // Cantilevered Modern Floating Roof Canopy
+    const roofGeo = new THREE.BoxGeometry(16.0, 0.5, 14.0);
+    const roof = new THREE.Mesh(roofGeo, colMat);
+    roof.position.set(hx, 5.3, hz);
+    this.scene.add(roof);
+
+    // Recessed ceiling architectural downlights
+    const downlight1 = new THREE.PointLight(0xffedd5, 3.2, 14);
+    downlight1.position.set(hx - 2, 5.0, hz);
+    this.scene.add(downlight1);
+
+    const downlight2 = new THREE.PointLight(0x38bdf8, 2.2, 12);
+    downlight2.position.set(hx + 3, 5.0, hz);
+    this.scene.add(downlight2);
+
+    // Studio Sign above entrance
+    const studioSign = this.createNeonSignMesh(6.2, 1.1, "EXECUTIVE STUDIO", "SYSTEMS ARCHITECTURE // MOULI", "#38bdf8");
+    studioSign.position.set(hx + 7.35, 4.4, hz);
+    studioSign.rotation.y = -Math.PI / 2;
+    this.scene.add(studioSign);
+
+    // Floating Executive Smoked-Glass Workstation
+    const deskGeo = new THREE.BoxGeometry(3.6, 0.1, 1.6);
+    const deskMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a,
+      roughness: 0.1,
+      metalness: 0.95
+    });
     const desk = new THREE.Mesh(deskGeo, deskMat);
-    desk.position.set(hx - 3.5, 1.1, hz);
+    desk.position.set(hx - 3.2, 1.1, hz);
     this.scene.add(desk);
 
-    // Desk legs
-    const legGeo = new THREE.BoxGeometry(0.1, 1.1, 1.3);
-    const leg1 = new THREE.Mesh(legGeo, this.materials.metalDark);
-    leg1.position.set(hx - 4.9, 0.55, hz);
+    // Polished titanium desk frame & legs
+    const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.1, 1.5), this.materials.concreteWall);
+    leg1.position.set(hx - 4.8, 0.55, hz);
     this.scene.add(leg1);
-    const leg2 = new THREE.Mesh(legGeo, this.materials.metalDark);
-    leg2.position.set(hx - 2.1, 0.55, hz);
+    const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.1, 1.5), this.materials.concreteWall);
+    leg2.position.set(hx - 1.6, 0.55, hz);
     this.scene.add(leg2);
 
     this.addCollider(new THREE.Box3(
-      new THREE.Vector3(hx - 5.2, 0, hz - 0.9),
-      new THREE.Vector3(hx - 1.8, 2.5, hz + 0.9)
+      new THREE.Vector3(hx - 5.0, 0, hz - 1.0),
+      new THREE.Vector3(hx - 1.4, 2.6, hz + 1.0)
     ));
 
-    // Dual Monitors on Desk
-    const monGeo = new THREE.BoxGeometry(1.2, 0.7, 0.05);
-    const monScreenMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-    const mon1 = new THREE.Mesh(monGeo, monScreenMat);
-    mon1.position.set(hx - 4.0, 1.6, hz - 0.2);
-    mon1.rotation.y = 0.2;
-    this.scene.add(mon1);
+    // Ultra-Wide Curved Panoramic Studio Display
+    const displayGeo = new THREE.CylinderGeometry(2.2, 2.2, 0.8, 24, 1, true, -Math.PI / 6, Math.PI / 3);
+    const displayMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      side: THREE.DoubleSide
+    });
+    const curvedDisplay = new THREE.Mesh(displayGeo, displayMat);
+    curvedDisplay.position.set(hx - 3.2, 1.7, hz - 0.35);
+    curvedDisplay.rotation.y = Math.PI;
+    this.scene.add(curvedDisplay);
 
-    const mon2 = new THREE.Mesh(monGeo, this.materials.neonMagenta);
-    mon2.position.set(hx - 2.8, 1.6, hz - 0.2);
-    mon2.rotation.y = -0.2;
-    this.scene.add(mon2);
+    // Architectural Task Lamp Bar
+    const lampBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.08), this.materials.neonCyan);
+    lampBar.position.set(hx - 3.2, 2.15, hz - 0.2);
+    this.scene.add(lampBar);
 
-    // Keyboard & Coffee Mug
-    const kb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.03, 0.25), this.materials.metalDark);
-    kb.position.set(hx - 3.5, 1.16, hz + 0.2);
-    this.scene.add(kb);
-
-    const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.16, 8), this.materials.neonAmber);
-    mug.position.set(hx - 2.4, 1.22, hz + 0.2);
-    this.scene.add(mug);
-
-    // Bookshelf against back wall
-    const shelfGeo = new THREE.BoxGeometry(3.6, 3.8, 0.7);
-    const shelf = new THREE.Mesh(shelfGeo, this.materials.concreteWall);
-    shelf.position.set(hx + 2.5, 1.9, hz - 5.2);
-    this.scene.add(shelf);
+    // Executive Milestone Credenza / Showcase Shelf
+    const credenzaGeo = new THREE.BoxGeometry(4.2, 1.8, 0.8);
+    const credenza = new THREE.Mesh(credenzaGeo, this.materials.concreteWall);
+    credenza.position.set(hx + 2.8, 0.9, hz - 5.4);
+    this.scene.add(credenza);
     this.addCollider(new THREE.Box3(
-      new THREE.Vector3(hx + 0.5, 0, hz - 5.7),
-      new THREE.Vector3(hx + 4.5, 4, hz - 4.7)
+      new THREE.Vector3(hx + 0.5, 0, hz - 5.9),
+      new THREE.Vector3(hx + 5.0, 3.5, hz - 4.9)
     ));
 
-    // Decorative Books on shelf
-    const bookColors = [0x00f0ff, 0xff007f, 0xffb703, 0x10b981];
-    for (let b = 0; b < 6; b++) {
-      const book = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 0.45, 0.35),
-        new THREE.MeshBasicMaterial({ color: bookColors[b % bookColors.length] })
-      );
-      book.position.set(hx + 1.2 + (b * 0.3), 2.2, hz - 5.2);
-      this.scene.add(book);
+    // Floating Glass Award Prisms on Credenza
+    for (let i = 0; i < 3; i++) {
+      const prismGeo = new THREE.OctahedronGeometry(0.24, 0);
+      const prismMat = i === 1 ? this.materials.gold : this.materials.neonCyan;
+      const prism = new THREE.Mesh(prismGeo, prismMat);
+      prism.position.set(hx + 1.6 + (i * 1.2), 2.2, hz - 5.4);
+      this.scene.add(prism);
+
+      this.animatedObjects.push({
+        update: (dt) => {
+          prism.rotation.y += dt * 0.8;
+        }
+      });
     }
 
-    // Interactive Terminal Computer on Desk
+    // Interactive Executive Console
     this.addInteractable({
       id: "house-terminal",
-      name: "Developer Workstation",
+      name: "Architect Console",
       type: "terminal",
-      position: new THREE.Vector3(hx - 3.5, 1.2, hz),
-      radius: 2.5,
-      prompt: "INSPECT WORKSTATION"
+      position: new THREE.Vector3(hx - 3.2, 1.2, hz),
+      radius: 2.8,
+      prompt: "ACCESS ARCHITECT CONSOLE"
     });
 
-    // NPC MOULI
-    this.buildMouliNPC(hx - 1.2, hz + 0.5);
+    // NPC MOULI (Distinguished Tech Lead Avatar)
+    this.buildMouliNPC(hx - 1.0, hz + 0.6);
   }
 
   buildMouliNPC(x, z) {
@@ -654,13 +751,13 @@ export class WorldBuilder {
       ));
     });
 
-    // Top Header Banner "PROJECT LAB"
+    // Top Header Banner "INNOVATION GALLERY"
     const bannerGeo = new THREE.BoxGeometry(16, 1.2, 0.4);
     const banner = new THREE.Mesh(bannerGeo, this.materials.metalDark);
     banner.position.set(lx, 5.8, lz + 11);
     this.scene.add(banner);
 
-    const labSign = this.createNeonSignMesh(15.5, 1.1, "PROJECT LAB", "INSPECTION BAY // 4 EXHIBITS", "#00f0ff");
+    const labSign = this.createNeonSignMesh(15.5, 1.1, "INNOVATION GALLERY", "SYSTEMS ARCHITECTURE & EXHIBITS", "#38bdf8");
     labSign.position.set(lx, 5.8, lz + 11.22);
     this.scene.add(labSign);
 
@@ -832,9 +929,9 @@ export class WorldBuilder {
     this.scene.add(coreLight);
 
     // Signboard
-    this.buildNavSign(sx - 10, sz, "✦ SKILL ARENA (5 ACTIVE NODES)", 0x00f0ff, Math.PI / 2);
+    this.buildNavSign(sx - 10, sz, "✦ TECHNOLOGY ATRIUM", 0x10b981, Math.PI / 2);
 
-    const skillSign = this.createNeonSignMesh(10, 1.2, "SKILL ARENA", "5 INTERACTIVE 3D NODES", "#10b981", "rgba(16, 185, 129, 0.6)");
+    const skillSign = this.createNeonSignMesh(10, 1.2, "TECHNOLOGY ATRIUM", "ENGINEERING MASTERY & STACK", "#10b981", "rgba(16, 185, 129, 0.4)");
     skillSign.position.set(sx, 4.8, sz - 10.5);
     this.scene.add(skillSign);
 
@@ -922,12 +1019,12 @@ export class WorldBuilder {
       this.addCollider(new THREE.Box3(new THREE.Vector3(p.x - 0.5, 0, p.z - 0.5), new THREE.Vector3(p.x + 0.5, 5, p.z + 0.5)));
     });
 
-    // Gallery Neon Sign
+    // Gallery Sign
     const sign = new THREE.Mesh(new THREE.BoxGeometry(10, 0.9, 0.3), this.materials.metalDark);
     sign.position.set(ax, 4.8, az + 8);
     this.scene.add(sign);
 
-    const achSign = this.createNeonSignMesh(9.5, 1.1, "HALL OF MILESTONES", "HONORS & RECOGNITION", "#ffb703", "rgba(255, 183, 3, 0.6)");
+    const achSign = this.createNeonSignMesh(9.5, 1.1, "HALL OF MILESTONES", "HONORS & RECOGNITION", "#f59e0b", "rgba(245, 158, 11, 0.4)");
     achSign.position.set(ax, 4.8, az + 8.2);
     this.scene.add(achSign);
 
@@ -1011,7 +1108,7 @@ export class WorldBuilder {
     dais.position.set(bx, 0.4, bz);
     this.scene.add(dais);
 
-    const bossSign = this.createNeonSignMesh(11, 1.3, "AEGIS CORE SPIRE", "FLAGSHIP MASTER PLATFORM", "#a855f7", "rgba(168, 85, 247, 0.6)");
+    const bossSign = this.createNeonSignMesh(11, 1.3, "QUANTUM CORE SPIRE", "FLAGSHIP ARCHITECTURE PLATFORM", "#a855f7", "rgba(168, 85, 247, 0.4)");
     bossSign.position.set(bx, 5.2, bz + 9);
     this.scene.add(bossSign);
 
@@ -1105,6 +1202,11 @@ export class WorldBuilder {
     borderRing.position.set(cx, 0.06, cz);
     this.scene.add(borderRing);
 
+    // Architectural Sign
+    const contactSign = this.createNeonSignMesh(8.5, 1.1, "EXECUTIVE COMMS", "DIRECT COLLABORATION & INQUIRIES", "#38bdf8");
+    contactSign.position.set(cx, 4.2, cz + 6.2);
+    this.scene.add(contactSign);
+
     // Satellite Dish Antenna Mast
     const mastGeo = new THREE.CylinderGeometry(0.2, 0.3, 7, 8);
     const mast = new THREE.Mesh(mastGeo, this.materials.metalDark);
@@ -1144,7 +1246,7 @@ export class WorldBuilder {
       new THREE.Vector3(cx + 1.4, 2.0, cz + 1.4)
     ));
 
-    const cLight = new THREE.PointLight(0x00f0ff, 3.0, 12);
+    const cLight = new THREE.PointLight(0x38bdf8, 3.0, 12);
     cLight.position.set(cx, 2.2, cz);
     this.scene.add(cLight);
 
@@ -1196,79 +1298,103 @@ export class WorldBuilder {
   }
 
   buildDistantSkyline() {
-    // Cyberpunk skyscraper metropolis in the distance
-    const buildingColors = [0x14203d, 0x1a294f, 0x172547, 0x1e3a6a];
-    const skylineRadius = 135;
+    // Prestigious global corporate tech metropolis in the distance
+    const buildingMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.25, metalness: 0.85 }),
+      new THREE.MeshStandardMaterial({ color: 0x131d33, roughness: 0.2, metalness: 0.9 }),
+      new THREE.MeshStandardMaterial({ color: 0x18243e, roughness: 0.3, metalness: 0.8 }),
+      new THREE.MeshStandardMaterial({ color: 0x0a101f, roughness: 0.35, metalness: 0.75 })
+    ];
 
-    for (let i = 0; i < 48; i++) {
-      const angle = (i / 48) * Math.PI * 2;
-      const dist = skylineRadius + (Math.sin(i * 3) * 16);
+    const warmWindowMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    const coolWindowMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
+    const redBeaconMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const crownMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+    const skylineRadius = 145;
+    const towerCount = 42;
+
+    for (let i = 0; i < towerCount; i++) {
+      const angle = (i / towerCount) * Math.PI * 2;
+      const dist = skylineRadius + (Math.sin(i * 4) * 20);
       const bx = Math.cos(angle) * dist;
       const bz = Math.sin(angle) * dist;
-      const width = 9 + Math.random() * 11;
-      const height = 35 + Math.random() * 60;
-      const depth = 9 + Math.random() * 11;
+      const width = 10 + (Math.sin(i * 2.3) + 1) * 6;
+      const height = 45 + (Math.sin(i * 1.7) + 1) * 35;
+      const depth = 10 + (Math.cos(i * 2.1) + 1) * 6;
 
+      // Main tower shaft
       const geo = new THREE.BoxGeometry(width, height, depth);
-      const mat = new THREE.MeshStandardMaterial({
-        color: buildingColors[i % buildingColors.length],
-        roughness: 0.4,
-        metalness: 0.7
-      });
+      const mat = buildingMaterials[i % buildingMaterials.length];
       const tower = new THREE.Mesh(geo, mat);
       tower.position.set(bx, height / 2, bz);
       this.scene.add(tower);
 
-      // Glowing window stripes / data-center bands on towers
-      const bandCount = 3 + Math.floor(Math.random() * 4);
-      for (let b = 1; b <= bandCount; b++) {
-        const bandHeight = (height / (bandCount + 1)) * b;
-        const bandGeo = new THREE.BoxGeometry(width + 0.1, 0.4, depth + 0.1);
-        const bandMesh = new THREE.Mesh(
-          bandGeo,
-          (i + b) % 2 === 0 ? this.materials.neonCyan : this.materials.neonMagenta
-        );
-        bandMesh.position.set(bx, bandHeight, bz);
+      // Multi-tier architectural crown setback for taller towers
+      if (height > 75) {
+        const crownGeo = new THREE.BoxGeometry(width * 0.65, 12, depth * 0.65);
+        const crown = new THREE.Mesh(crownGeo, mat);
+        crown.position.set(bx, height + 6, bz);
+        this.scene.add(crown);
+      }
+
+      // Elegant architectural office window grid bands (soft warm & cool lights)
+      const floorBands = 5 + Math.floor((height / 110) * 8);
+      for (let f = 1; f <= floorBands; f++) {
+        const bandY = (height / (floorBands + 1)) * f;
+        const bandGeo = new THREE.BoxGeometry(width + 0.08, 0.45, depth + 0.08);
+        const bandMesh = new THREE.Mesh(bandGeo, f % 2 === 0 ? warmWindowMat : coolWindowMat);
+        bandMesh.position.set(bx, bandY, bz);
         this.scene.add(bandMesh);
       }
 
-      // Neon rooftop beacon & spire antenna
-      const beacon = new THREE.Mesh(
-        new THREE.BoxGeometry(width * 0.85, 0.5, depth * 0.85),
-        i % 2 === 0 ? this.materials.neonCyan : this.materials.neonMagenta
+      // Architectural rooftop crown parapet light
+      const roofBand = new THREE.Mesh(
+        new THREE.BoxGeometry(width + 0.1, 0.3, depth + 0.1),
+        crownMat
       );
-      beacon.position.set(bx, height + 0.25, bz);
-      this.scene.add(beacon);
+      roofBand.position.set(bx, height - 0.2, bz);
+      this.scene.add(roofBand);
 
+      // Rooftop Communications Mast with Red Aviation Warning Beacon
       if (i % 2 === 0) {
+        const mastHeight = 8 + (i % 3) * 4;
         const spire = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.08, 0.15, 6, 6),
-          this.materials.neonAmber
+          new THREE.CylinderGeometry(0.08, 0.2, mastHeight, 6),
+          this.materials.metalDark
         );
-        spire.position.set(bx, height + 3.2, bz);
+        spire.position.set(bx, height + mastHeight / 2, bz);
         this.scene.add(spire);
+
+        const beacon = new THREE.Mesh(
+          new THREE.SphereGeometry(0.28, 8, 8),
+          redBeaconMat
+        );
+        beacon.position.set(bx, height + mastHeight, bz);
+        this.scene.add(beacon);
       }
     }
   }
 
   buildParticleDust() {
-    const particleCount = 200;
+    // Ethereal ambient micro-stardust
+    const particleCount = 240;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 120;
-      positions[i + 1] = 0.5 + Math.random() * 14;
-      positions[i + 2] = (Math.random() - 0.5) * 120;
+      positions[i] = (Math.random() - 0.5) * 140;
+      positions[i + 1] = 0.5 + Math.random() * 16;
+      positions[i + 2] = (Math.random() - 0.5) * 140;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.PointsMaterial({
-      color: 0x00f0ff,
-      size: 0.15,
+      color: 0x93c5fd,
+      size: 0.18,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.4,
       blending: THREE.AdditiveBlending
     });
 
@@ -1279,8 +1405,8 @@ export class WorldBuilder {
       update: (dt) => {
         const posArr = geometry.attributes.position.array;
         for (let i = 1; i < posArr.length; i += 3) {
-          posArr[i] += Math.sin(posArr[i - 1] + posArr[i + 1]) * dt * 0.3;
-          if (posArr[i] > 16) posArr[i] = 0.5;
+          posArr[i] += Math.sin(posArr[i - 1] + posArr[i + 1]) * dt * 0.25;
+          if (posArr[i] > 18) posArr[i] = 0.5;
         }
         geometry.attributes.position.needsUpdate = true;
       }

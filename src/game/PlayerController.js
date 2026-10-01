@@ -62,23 +62,23 @@ export class PlayerController {
       metalness: 0.85
     });
     const goldAccentMat = new THREE.MeshStandardMaterial({
-      color: 0xffb703,
-      emissive: 0xff9900,
-      emissiveIntensity: 0.6,
+      color: 0xf59e0b,
+      emissive: 0xd97706,
+      emissiveIntensity: 0.5,
       roughness: 0.2,
       metalness: 0.9
     });
     const neonCyanMat = new THREE.MeshStandardMaterial({
-      color: 0x00f0ff,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 2.2,
-      roughness: 0.1
+      color: 0x38bdf8,
+      emissive: 0x0284c7,
+      emissiveIntensity: 1.4,
+      roughness: 0.15
     });
     const neonMagentaMat = new THREE.MeshStandardMaterial({
-      color: 0xff007f,
-      emissive: 0xff007f,
-      emissiveIntensity: 2.0,
-      roughness: 0.1
+      color: 0x818cf8,
+      emissive: 0x6366f1,
+      emissiveIntensity: 1.2,
+      roughness: 0.15
     });
 
     // 1. Torso & Armor Vest (Luminous white/silver chest with slate armor plates)
@@ -266,13 +266,13 @@ export class PlayerController {
     this.group.add(this.rightLegPivot);
 
     // --- HERO AURA LIGHTS (Permanently illuminates character and surrounding ground) ---
-    // Front glowing aura
-    this.playerFrontAura = new THREE.PointLight(0x00f0ff, 2.8, 10);
+    // Front character fill light
+    this.playerFrontAura = new THREE.PointLight(0xf0fdf4, 1.8, 8);
     this.playerFrontAura.position.set(0, 1.6, 0.6);
     this.group.add(this.playerFrontAura);
 
-    // Back jetpack glowing rim aura
-    this.playerBackAura = new THREE.PointLight(0x38bdf8, 2.2, 8);
+    // Back jetpack rim light
+    this.playerBackAura = new THREE.PointLight(0x38bdf8, 1.6, 7);
     this.playerBackAura.position.set(0, 1.4, -0.8);
     this.group.add(this.playerBackAura);
 
