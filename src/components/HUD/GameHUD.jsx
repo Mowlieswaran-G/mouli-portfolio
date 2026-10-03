@@ -1,6 +1,6 @@
 import React from 'react';
 import { Minimap } from './Minimap.jsx';
-import { Volume2, VolumeX, Menu, Monitor, Sparkles, Compass, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Volume2, VolumeX, Menu, Monitor, Sparkles, Compass, ChevronRight, Bot } from 'lucide-react';
 import { soundManager } from '../../systems/audioSystem.js';
 
 export const GameHUD = ({
@@ -12,8 +12,18 @@ export const GameHUD = ({
   onToggleMute,
   onOpenPauseMenu,
   onSwitchTo2D,
-  onTriggerInteraction
+  onTriggerInteraction,
+  onRobotAction
 }) => {
+  // Robot nav buttons: label, animation action for Bolt robot
+  const ROBOT_BUTTONS = [
+    { label: 'Home',     icon: '🏛️', action: 'wave',  tip: 'Nexus Hub' },
+    { label: 'About',   icon: '🏢', action: 'point', tip: 'Executive Studio' },
+    { label: 'Projects',icon: '⚡', action: 'jump',  tip: 'Innovation Gallery' },
+    { label: 'Skills',  icon: '✦',  action: 'dance', tip: 'Technology Atrium' },
+    { label: 'Contact', icon: '🛰️', action: 'spin',  tip: 'Executive Comms' },
+  ];
+
   return (
     <div className="hud-layer">
       {/* Top Header */}
@@ -33,7 +43,7 @@ export const GameHUD = ({
               </div>
               <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                FULL STACK & 3D SYSTEMS
+                FULL STACK &amp; 3D SYSTEMS
               </div>
             </div>
           </div>
@@ -112,8 +122,9 @@ export const GameHUD = ({
         </div>
       )}
 
-      {/* Bottom Controls Indicator */}
+      {/* Bottom Row: Controls hint + Robot Nav + Status */}
       <div className="flex items-end justify-between w-full">
+        {/* Bottom Left: Keyboard hint */}
         <div className="glass-panel px-3.5 py-2 text-[11px] font-mono text-slate-400 flex items-center gap-3 hidden md:flex">
           <div className="flex items-center gap-1">
             <span className="px-1.5 py-0.5 rounded bg-white/10 text-slate-200 border border-white/15">WASD</span>
@@ -136,6 +147,30 @@ export const GameHUD = ({
             <span>Interact</span>
           </div>
         </div>
+
+        {/* Bottom Center: Bolt Robot Navigation Bar */}
+        {onRobotAction && (
+          <div className="robot-nav-bar hud-interactive">
+            <div className="robot-nav-label">
+              <Bot size={11} />
+              <span>BOLT CONTROLS</span>
+            </div>
+            <div className="robot-nav-buttons">
+              {ROBOT_BUTTONS.map(btn => (
+                <button
+                  key={btn.label}
+                  id={`robot-nav-${btn.label.toLowerCase()}`}
+                  className="robot-nav-btn"
+                  title={`${btn.tip} \u2014 makes Bolt ${btn.action}`}
+                  onClick={() => onRobotAction(btn.action)}
+                >
+                  <span className="robot-nav-icon">{btn.icon}</span>
+                  <span className="robot-nav-text">{btn.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="glass-panel px-3 py-1.5 text-[10px] font-mono text-slate-500">
           MOULI_PORTFOLIO_WORLD // 60 FPS // READY

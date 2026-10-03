@@ -85,10 +85,19 @@ export default function App() {
     }
   };
 
-  // Dynamically initialize Three.js GameEngine when entering 'playing' mode
-  useEffect(() => {
-    if (viewMode !== 'playing') return;
+  const [isEngineReady, setIsEngineReady] = useState(false);
 
+  const viewModeRef = useRef(viewMode);
+  viewModeRef.current = viewMode;
+
+  const saveDataRef = useRef(saveData);
+  useEffect(() => {
+    saveDataRef.current = saveData;
+  }, [saveData]);
+
+  // Pre-initialize Three.js GameEngine immediately on mount in background
+  // This guarantees 0ms instant loading when the user clicks 'ENTER WORLD'
+  useEffect(() => {
     let isMounted = true;
 
     if (!gameEngineRef.current && canvasRef.current) {
@@ -105,7 +114,7 @@ export default function App() {
           onPlayerMove: (pos) => {
             setPlayerPos(pos);
             // Quest 1 trigger: moving in plaza
-            if (saveData.activeQuestIndex === 0) {
+            if (saveDataRef.current?.activeQuestIndex === 0) {
               if (Math.hypot(pos.x, pos.z - 8) > 3) {
                 advanceQuest(0);
               }
@@ -113,8 +122,14 @@ export default function App() {
           }
         });
 
+        // Initially disable player movement while on intro screen
+        if (engine.player) {
+          engine.player.enabled = (viewModeRef.current === 'playing');
+        }
+
         engine.start();
         gameEngineRef.current = engine;
+        setIsEngineReady(true);
         setIsEngineLoading(false);
       }).catch((err) => {
         console.error("Failed to load GameEngine", err);
@@ -129,7 +144,25 @@ export default function App() {
         gameEngineRef.current = null;
       }
     };
-  }, [viewMode]);
+  }, []);
+
+  // Update GameEngine controls & loop when viewMode, modal or pause state changes
+  useEffect(() => {
+    const engine = gameEngineRef.current;
+    if (!engine) return;
+
+    if (viewMode === 'playing') {
+      const canMove = !activeModal && !isPaused;
+      if (engine.player) engine.player.enabled = canMove;
+      engine.start();
+    } else if (viewMode === 'intro') {
+      if (engine.player) engine.player.enabled = false;
+      engine.start(); // Keep warm background render
+    } else if (viewMode === 'classic_2d') {
+      if (engine.player) engine.player.enabled = false;
+      engine.stop(); // Stop loop to save CPU & GPU in 2D mode
+    }
+  }, [viewMode, activeModal, isPaused]);
 
   // Handle ESC key for Pause Menu or closing Modals
   useEffect(() => {
@@ -210,11 +243,26 @@ export default function App() {
     showToast("PROGRESS RESET", "World journey restored to beginning.");
   };
 
+  const handleRobotAction = (action) => {
+    if (gameEngineRef.current) {
+      gameEngineRef.current.playRobotAction(action);
+    }
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden bg-[#06080f]">
+      {/* 0. Persistent Three.js Canvas Container — Pre-mounted in background for INSTANT 0ms launch */}
+      <div
+        ref={canvasRef}
+        className={`canvas-container fixed inset-0 z-0 transition-opacity duration-300 ${
+          viewMode === 'classic_2d' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      />
+
       {/* 1. Opening Cinematic View */}
       {viewMode === 'intro' && (
         <IntroCinematic
+          isEngineReady={isEngineReady}
           onStartGame={() => setViewMode('playing')}
           onSwitchTo2D={() => setViewMode('classic_2d')}
         />
@@ -235,11 +283,11 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* 3. 3D Game World View */}
+      {/* 3. 3D Game World View & HUD */}
       {viewMode === 'playing' && (
         <>
-          {/* Instant Cyber Loading Overlay during 3D initialization */}
-          {isEngineLoading && (
+          {/* Fallback loading indicator only if clicked before initial background compile finishes */}
+          {!isEngineReady && (
             <div className="fixed inset-0 z-50 bg-[#06080f] flex flex-col items-center justify-center pointer-events-none transition-opacity duration-300">
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
@@ -253,11 +301,8 @@ export default function App() {
             </div>
           )}
 
-          {/* Three.js Canvas Container */}
-          <div ref={canvasRef} className="canvas-container" />
-
           {/* Vignette & Scanline Overlay */}
-          <div className="screen-overlay" />
+          <div className="screen-overlay pointer-events-none" />
 
           {/* Game HUD */}
           <GameHUD
@@ -270,6 +315,7 @@ export default function App() {
             onOpenPauseMenu={() => setIsPaused(true)}
             onSwitchTo2D={() => setViewMode('classic_2d')}
             onTriggerInteraction={() => handleTriggerInteraction(interactionPrompt)}
+            onRobotAction={handleRobotAction}
           />
 
           {/* Mobile Touch Virtual Joystick & Buttons */}

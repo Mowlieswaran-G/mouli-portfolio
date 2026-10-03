@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PROJECTS_DATA } from '../data/projects.js';
 import { SKILLS_DATA } from '../data/skills.js';
 import { ACHIEVEMENTS_DATA } from '../data/achievements.js';
+import { BoltRobot } from './BoltRobot.js';
 
 export class WorldBuilder {
   constructor(scene) {
@@ -10,6 +11,10 @@ export class WorldBuilder {
     this.interactables = [];
     this.animatedObjects = [];
     this.npc = null;
+    /** @type {BoltRobot|null} Seated Bolt at desk (ambient, not interactable) */
+    this.seatedRobot = null;
+    /** @type {BoltRobot|null} Standing Bolt — only used if you want two Bolts */
+    this.boltRobot = null;
 
     // Materials Palette
     this.initMaterials();
@@ -21,26 +26,26 @@ export class WorldBuilder {
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
     
-    // Balanced medium slate stone base (combines light and dark values)
-    ctx.fillStyle = '#526071';
+    // Warm twilight stone base — deep charcoal with amber warmth
+    ctx.fillStyle = '#2a2218';
     ctx.fillRect(0, 0, 1024, 1024);
 
     // Subtle stone tile grid (clean architectural pavers)
     const tileSize = 128;
     for (let x = 0; x < 1024; x += tileSize) {
       for (let y = 0; y < 1024; y += tileSize) {
-        // Micro tonal variation between tiles
+        // Micro tonal variation between tiles — warm vs cool stone
         const isAlt = ((x / tileSize) + (y / tileSize)) % 2 === 0;
-        ctx.fillStyle = isAlt ? '#5d6c7e' : '#4d5b6c';
+        ctx.fillStyle = isAlt ? '#2e2820' : '#252018';
         ctx.fillRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
 
-        // Architectural joint seams (bright light highlight seam)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        // Warm amber joint seams (picks up golden-hour light)
+        ctx.strokeStyle = 'rgba(245, 166, 35, 0.18)';
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, tileSize, tileSize);
 
-        // Dark corner alignment ticks (dark contrast)
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        // Dark corner alignment ticks
+        ctx.fillStyle = 'rgba(10, 12, 20, 0.5)';
         ctx.fillRect(x - 2, y - 2, 4, 4);
       }
     }
@@ -158,47 +163,47 @@ export class WorldBuilder {
   initMaterials() {
     const gridTex = this.createGridTexture();
     this.materials = {
-      // Medium architectural slate paver (Medium tone background)
+      // Warm twilight dark stone paver — deep charcoal kissed with amber
       floorDark: new THREE.MeshStandardMaterial({
-        color: 0x64748b, // Balanced slate grey
+        color: 0x1a1610, // Deep warm charcoal ground
         map: gridTex,
-        roughness: 0.55,
+        roughness: 0.75,
+        metalness: 0.08
+      }),
+      // Warm cream marble plaza — picks up golden-hour light beautifully
+      plazaFloor: new THREE.MeshStandardMaterial({
+        color: 0xf5ead0, // Warm cream stone, not stark white
+        map: gridTex,
+        roughness: 0.25,
+        metalness: 0.3
+      }),
+      // Warm architectural off-white — feels premium, not clinical
+      concreteWall: new THREE.MeshStandardMaterial({
+        color: 0xd4c9b5, // Warm sand-white — looks great under golden light
+        roughness: 0.35,
         metalness: 0.2
       }),
-      // Luminous Platinum/White Marble Platform (Light contrast element!)
-      plazaFloor: new THREE.MeshStandardMaterial({
-        color: 0xf1f5f9, // Light clean stone
-        map: gridTex,
-        roughness: 0.2,
-        metalness: 0.35
-      }),
-      // Architectural off-white columns & structures (Light structural element)
-      concreteWall: new THREE.MeshStandardMaterial({
-        color: 0xe2e8f0, // Clean light architectural tone
-        roughness: 0.3,
-        metalness: 0.25
-      }),
-      // Contrasting dark slate/graphite frame (Dark contrast element)
+      // Deep navy graphite frame — strong contrast with warm sky
       metalDark: new THREE.MeshStandardMaterial({
-        color: 0x1e293b, // Dark contrast element
-        roughness: 0.25,
-        metalness: 0.85
+        color: 0x0d1520, // Very deep navy-charcoal
+        roughness: 0.2,
+        metalness: 0.9
       }),
-      // Architectural panoramic crystal glass
+      // Twilight-tinted architectural glass — deep blue with amber reflections
       glass: new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
+        color: 0x4a7fa0,
         transparent: true,
-        opacity: 0.35,
-        roughness: 0.05,
-        metalness: 0.95
+        opacity: 0.38,
+        roughness: 0.04,
+        metalness: 0.96
       }),
-      // Smoked architectural glass
+      // Deep smoked architectural glass — very dark blue-charcoal
       smokedGlass: new THREE.MeshStandardMaterial({
-        color: 0x1e293b,
+        color: 0x0d1830,
         transparent: true,
-        opacity: 0.55,
-        roughness: 0.08,
-        metalness: 0.85
+        opacity: 0.65,
+        roughness: 0.06,
+        metalness: 0.88
       }),
       // Curated Architectural Accents (Clean, non-garish)
       neonCyan: new THREE.MeshStandardMaterial({
@@ -546,16 +551,456 @@ export class WorldBuilder {
     roof.position.set(hx, 5.3, hz);
     this.scene.add(roof);
 
-    // Recessed ceiling architectural downlights
-    const downlight1 = new THREE.PointLight(0xffedd5, 3.2, 14);
-    downlight1.position.set(hx - 2, 5.0, hz);
-    this.scene.add(downlight1);
+    // -------------------------------------------------------
+    // EXECUTIVE STUDIO ARCHITECTURAL LIGHTING SYSTEM
+    // -------------------------------------------------------
+    const warmCeilingMat = new THREE.MeshBasicMaterial({ color: 0xfffbee });
+    const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.8 });
 
-    const downlight2 = new THREE.PointLight(0x38bdf8, 2.2, 12);
-    downlight2.position.set(hx + 3, 5.0, hz);
-    this.scene.add(downlight2);
+    // 1. Recessed LED Ceiling Light Panels (6 flush architectural fixtures)
+    const panelPositions = [
+      { x: hx - 3.2, z: hz - 3.2 },
+      { x: hx - 3.2, z: hz },
+      { x: hx - 3.2, z: hz + 3.2 },
+      { x: hx + 3.2, z: hz - 3.2 },
+      { x: hx + 3.2, z: hz },
+      { x: hx + 3.2, z: hz + 3.2 }
+    ];
 
-    // Studio Sign above entrance
+    panelPositions.forEach(p => {
+      // Outer dark frame
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.04, 1.4), panelFrameMat);
+      frame.position.set(p.x, 5.06, p.z);
+      this.scene.add(frame);
+      // Glowing diffuser panel
+      const diffuser = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.02, 1.2), warmCeilingMat);
+      diffuser.position.set(p.x, 5.04, p.z);
+      this.scene.add(diffuser);
+    });
+
+    // 2. Primary Architectural Studio Illumination
+    // Central warm studio illumination
+    const centerLight = new THREE.PointLight(0xfff5ea, 5.5, 20);
+    centerLight.position.set(hx, 4.8, hz);
+    this.scene.add(centerLight);
+
+    // Dedicated workstation & typing robot illumination
+    const deskDownlight = new THREE.PointLight(0xffeed6, 6.0, 16);
+    deskDownlight.position.set(hx - 3.2, 4.4, hz);
+    this.scene.add(deskDownlight);
+
+    // Mouli & Credenza meeting area light
+    const loungeDownlight = new THREE.PointLight(0xfff5ea, 5.0, 16);
+    loungeDownlight.position.set(hx + 3.0, 4.8, hz);
+    this.scene.add(loungeDownlight);
+
+    // North wall / Credenza gallery wash
+    const credenzaWash = new THREE.PointLight(0x38bdf8, 3.5, 14);
+    credenzaWash.position.set(hx + 2.8, 4.2, hz - 4.5);
+    this.scene.add(credenzaWash);
+
+    // South facade ambient warm wash
+    const southWash = new THREE.PointLight(0xfef08a, 3.0, 14);
+    southWash.position.set(hx, 4.2, hz + 4.8);
+    this.scene.add(southWash);
+
+    // 3. Suspended Sleek Linear LED Chandelier directly above the Executive Desk
+    const fixtureY = 3.4;
+    const chandelierBody = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 0.08, 0.22),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2, metalness: 0.9 })
+    );
+    chandelierBody.position.set(hx - 3.2, fixtureY, hz);
+    this.scene.add(chandelierBody);
+
+    // Underside glowing LED diffuser
+    const chandelierGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(3.0, 0.02, 0.16),
+      warmCeilingMat
+    );
+    chandelierGlow.position.set(hx - 3.2, fixtureY - 0.04, hz);
+    this.scene.add(chandelierGlow);
+
+    // Suspension cables connecting fixture to ceiling
+    [-1.2, 1.2].forEach(ox => {
+      const cable = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 5.05 - fixtureY, 8),
+        this.materials.concreteWall
+      );
+      cable.position.set(hx - 3.2 + ox, fixtureY + (5.05 - fixtureY) / 2, hz);
+      this.scene.add(cable);
+    });
+
+    // High-focus desk spotlight shining directly onto keyboard, monitors & desk
+    const deskSpot = new THREE.SpotLight(0xfff8ee, 6.0, 6.0, Math.PI / 3, 0.5, 1.2);
+    deskSpot.position.set(hx - 3.2, fixtureY - 0.1, hz);
+    const spotTarget = new THREE.Object3D();
+    spotTarget.position.set(hx - 3.2, 1.1, hz);
+    this.scene.add(spotTarget);
+    deskSpot.target = spotTarget;
+    this.scene.add(deskSpot);
+
+    // 4. Architect Studio Cove Light Trim (Perimeter ambient glow around top ceiling)
+    const coveColor = 0x38bdf8;
+    const coveMat = new THREE.MeshBasicMaterial({ color: coveColor });
+    [-5.8, 5.8].forEach(cz => {
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(14.0, 0.05, 0.05), coveMat);
+      strip.position.set(hx, 4.95, hz + cz);
+      this.scene.add(strip);
+    });
+    [-6.8, 6.8].forEach(cx => {
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 11.6), coveMat);
+      strip.position.set(hx + cx, 4.95, hz);
+      this.scene.add(strip);
+    });
+
+    // 5. Designer LED Desk Lamp on Workstation
+    const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.13, 0.03, 16), panelFrameMat);
+    lampBase.position.set(hx - 4.6, 1.16, hz - 0.55);
+    this.scene.add(lampBase);
+
+    const lampArm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 8), panelFrameMat);
+    lampArm1.position.set(hx - 4.55, 1.35, hz - 0.52);
+    lampArm1.rotation.z = -0.3;
+    this.scene.add(lampArm1);
+
+    const lampArm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.38, 8), panelFrameMat);
+    lampArm2.position.set(hx - 4.42, 1.58, hz - 0.45);
+    lampArm2.rotation.z = 0.5;
+    this.scene.add(lampArm2);
+
+    const lampHead = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.03, 0.08), panelFrameMat);
+    lampHead.position.set(hx - 4.28, 1.68, hz - 0.4);
+    lampHead.rotation.z = 0.1;
+    this.scene.add(lampHead);
+
+    const lampBulb = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.01, 0.06), warmCeilingMat);
+    lampBulb.position.set(hx - 4.28, 1.66, hz - 0.4);
+    this.scene.add(lampBulb);
+
+    const lampLight = new THREE.PointLight(0xffecd2, 3.5, 4.0);
+    lampLight.position.set(hx - 4.28, 1.60, hz - 0.4);
+    this.scene.add(lampLight);
+
+    // -------------------------------------------------------
+    // 6. CHROMATIC AMBIENT ACCENT LIGHTING (Vibrant Cyber-Color Glow)
+    // -------------------------------------------------------
+    // A. Vertical Architectural Neon Tube Columns in corners
+    const neonPillars = [
+      { x: hx - 6.8, z: hz - 5.8, color: 0x00f0ff, name: 'cyan' },     // NW: Electric Cyan
+      { x: hx - 6.8, z: hz + 5.8, color: 0xe879f9, name: 'magenta' },  // SW: Neon Fuchsia/Magenta
+      { x: hx + 6.8, z: hz - 5.8, color: 0x38bdf8, name: 'sky' },      // NE: Neon Sky Blue
+      { x: hx + 6.8, z: hz + 5.8, color: 0xa855f7, name: 'purple' }    // SE: Electric Violet
+    ];
+
+    neonPillars.forEach(np => {
+      // Sleek vertical fixture tube
+      const tubeMat = new THREE.MeshBasicMaterial({ color: np.color });
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 4.4, 16), tubeMat);
+      tube.position.set(np.x, 2.5, np.z);
+      this.scene.add(tube);
+
+      // Top and bottom mounting collar caps
+      [-2.2, 2.2].forEach(oy => {
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.08, 16), panelFrameMat);
+        cap.position.set(np.x, 2.5 + oy, np.z);
+        this.scene.add(cap);
+      });
+
+      // Colored point light radiating from the pillar
+      const pLight = new THREE.PointLight(np.color, 4.2, 9.5);
+      pLight.position.set(np.x, 2.5, np.z);
+      this.scene.add(pLight);
+
+      this.animatedObjects.push({
+        update: () => {
+          pLight.intensity = 4.2 + Math.sin(Date.now() * 0.002 + np.x) * 0.8;
+        }
+      });
+    });
+
+    // B. Under-Desk Vibrant RGB Glow Strip & Floor Pool
+    const underDeskStrip = new THREE.Mesh(
+      new THREE.BoxGeometry(3.4, 0.03, 0.04),
+      new THREE.MeshBasicMaterial({ color: 0x00f5ff })
+    );
+    underDeskStrip.position.set(hx - 3.2, 1.05, hz + 0.76);
+    this.scene.add(underDeskStrip);
+
+    const underDeskLight = new THREE.PointLight(0x00e5ff, 4.5, 4.8);
+    underDeskLight.position.set(hx - 3.2, 0.5, hz);
+    this.scene.add(underDeskLight);
+
+    // C. Back Wall Dual-Color Chromatic Wall Wash (Magenta + Cyan Cyber-Split)
+    const backWashPink = new THREE.PointLight(0xec4899, 4.2, 8.5);
+    backWashPink.position.set(hx - 3.2, 0.35, hz - 5.7);
+    this.scene.add(backWashPink);
+
+    const pinkWallMarker = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.04, 0.06),
+      new THREE.MeshBasicMaterial({ color: 0xec4899 })
+    );
+    pinkWallMarker.position.set(hx - 3.2, 0.15, hz - 5.95);
+    this.scene.add(pinkWallMarker);
+
+    const backWashCyan = new THREE.PointLight(0x06b6d4, 4.2, 8.5);
+    backWashCyan.position.set(hx + 3.2, 0.35, hz - 5.7);
+    this.scene.add(backWashCyan);
+
+    const cyanWallMarker = new THREE.Mesh(
+      new THREE.BoxGeometry(2.4, 0.04, 0.06),
+      new THREE.MeshBasicMaterial({ color: 0x06b6d4 })
+    );
+    cyanWallMarker.position.set(hx + 3.2, 0.15, hz - 5.95);
+    this.scene.add(cyanWallMarker);
+
+    // D. Credenza Showcase Violet Aura Underglow
+    const credenzaAuraLight = new THREE.PointLight(0xa855f7, 3.8, 6.0);
+    credenzaAuraLight.position.set(hx + 2.8, 0.3, hz - 5.4);
+    this.scene.add(credenzaAuraLight);
+
+    const credenzaNeonBar = new THREE.Mesh(
+      new THREE.BoxGeometry(4.0, 0.03, 0.04),
+      new THREE.MeshBasicMaterial({ color: 0xa855f7 })
+    );
+    credenzaNeonBar.position.set(hx + 2.8, 0.08, hz - 4.98);
+    this.scene.add(credenzaNeonBar);
+
+    // -------------------------------------------------------
+    // ENTRANCE MARQUEE BOARD — mounted directly ABOVE THE ENTRANCE
+    // Doorway is at extEntranceX = hx + 7.2 (-20.8), roof edge at -20.0
+    // Mounted directly above the entrance door opening at y=5.85, facing East towards the Plaza
+    // -------------------------------------------------------
+    const extEntranceX = hx + 7.2; // -20.8
+    const billX   = extEntranceX + 0.82; // -19.98 (rests right along the front roof overhang)
+    const billY   = 5.85;                // directly above the entrance doorway (clearance 5.15m underneath)
+    const billZ   = hz;                  // centered horizontally over entrance walkway (z=0)
+    const billW   = 5.6;                 // width across entrance columns (spans Z)
+    const billH   = 1.35;                // height (Y axis)
+
+    // ---- Canvas: High-res crisp 2048x512 with luminous cyber styling ----
+    const extSignCanvas = document.createElement('canvas');
+    extSignCanvas.width  = 2048;
+    extSignCanvas.height = 512;
+    const exc = extSignCanvas.getContext('2d');
+
+    // Rich dark cyber-glass gradient background
+    const extGrad = exc.createLinearGradient(0, 0, 2048, 512);
+    extGrad.addColorStop(0,   '#030712');
+    extGrad.addColorStop(0.3, '#081528');
+    extGrad.addColorStop(0.7, '#0c2242');
+    extGrad.addColorStop(1,   '#030712');
+    exc.fillStyle = extGrad;
+    exc.fillRect(0, 0, 2048, 512);
+
+    // Subtle high-tech grid lines in canvas background
+    exc.strokeStyle = 'rgba(0, 240, 255, 0.07)';
+    exc.lineWidth = 1.5;
+    for (let gx = 64; gx < 2048; gx += 64) {
+      exc.beginPath(); exc.moveTo(gx, 0); exc.lineTo(gx, 512); exc.stroke();
+    }
+    for (let gy = 64; gy < 512; gy += 64) {
+      exc.beginPath(); exc.moveTo(0, gy); exc.lineTo(2048, gy); exc.stroke();
+    }
+
+    // Outer luminous cyan border
+    exc.strokeStyle = '#00f5ff';
+    exc.lineWidth = 10;
+    exc.strokeRect(10, 10, 2028, 492);
+
+    // Inner subtle secondary border
+    exc.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    exc.lineWidth = 3;
+    exc.strokeRect(26, 26, 1996, 460);
+
+    // High-tech corner bracket accents
+    exc.strokeStyle = '#38bdf8';
+    exc.lineWidth = 14;
+    const bL = 70;
+    exc.beginPath(); exc.moveTo(10 + bL, 10);     exc.lineTo(10, 10);       exc.lineTo(10, 10 + bL);     exc.stroke();
+    exc.beginPath(); exc.moveTo(2038 - bL, 10);   exc.lineTo(2038, 10);     exc.lineTo(2038, 10 + bL);   exc.stroke();
+    exc.beginPath(); exc.moveTo(10, 502 - bL);    exc.lineTo(10, 502);      exc.lineTo(10 + bL, 502);    exc.stroke();
+    exc.beginPath(); exc.moveTo(2038 - bL, 502);  exc.lineTo(2038, 502);    exc.lineTo(2038, 502 - bL);  exc.stroke();
+
+    // Top pill badge: [ ⚡ CREATOR'S HEADQUARTERS ]
+    const badgeW = 680;
+    const badgeH = 58;
+    const badgeX = (2048 - badgeW) / 2;
+    const badgeY = 46;
+    exc.fillStyle = 'rgba(14, 165, 233, 0.18)';
+    exc.beginPath();
+    exc.roundRect(badgeX, badgeY, badgeW, badgeH, 29);
+    exc.fill();
+    exc.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+    exc.lineWidth = 2.5;
+    exc.stroke();
+
+    exc.fillStyle = '#38bdf8';
+    exc.font = 'bold 36px "Space Grotesk", sans-serif';
+    exc.textAlign = 'center';
+    exc.textBaseline = 'middle';
+    exc.fillText('✦  CREATOR\'S HEADQUARTERS  ✦', 1024, badgeY + badgeH / 2 + 1);
+
+    // MOULI — Big glowing heroic title
+    exc.shadowColor = '#00f5ff';
+    exc.shadowBlur  = 40;
+    exc.fillStyle   = '#ffffff';
+    exc.font = '900 178px "Space Grotesk", sans-serif';
+    exc.textAlign   = 'center';
+    exc.textBaseline = 'alphabetic';
+    exc.fillText('MOULI', 1024, 305);
+
+    // Separator line under MOULI
+    exc.shadowBlur = 0;
+    exc.strokeStyle = 'rgba(0, 245, 255, 0.4)';
+    exc.lineWidth = 3;
+    exc.beginPath();
+    exc.moveTo(180, 345);
+    exc.lineTo(1868, 345);
+    exc.stroke();
+
+    // Bottom action banner: TALK WITH MOULI · ENTER HERE
+    // Status dot (online green)
+    exc.fillStyle = '#10b981';
+    exc.beginPath();
+    exc.arc(380, 428, 12, 0, Math.PI * 2);
+    exc.fill();
+
+    exc.fillStyle = '#a5f3fc';
+    exc.font = 'bold 50px "JetBrains Mono", monospace';
+    exc.textAlign = 'center';
+    exc.textBaseline = 'middle';
+    exc.fillText('TALK WITH MOULI  •  ENTER STUDIO  ➜', 1040, 428);
+
+    const extSignTex = new THREE.CanvasTexture(extSignCanvas);
+    extSignTex.needsUpdate = true;
+
+    // Sign front plane — facing East (+X) towards incoming players from the Plaza
+    const extSign = new THREE.Mesh(
+      new THREE.PlaneGeometry(billW, billH),
+      new THREE.MeshBasicMaterial({ map: extSignTex, side: THREE.DoubleSide })
+    );
+    extSign.position.set(billX, billY, billZ);
+    extSign.rotation.y = Math.PI / 2;
+    this.scene.add(extSign);
+
+    // -------------------------------------------------------
+    // BOARD FRAME + BACKING (strictly BEHIND the sign plane)
+    // Backing is at billX - 0.05, so its front face is at billX - 0.01
+    // (Never covers or clips the sign face!)
+    // -------------------------------------------------------
+    const bkMat = new THREE.MeshStandardMaterial({ color: 0x050d1a, roughness: 0.2, metalness: 0.9 });
+    const backing = new THREE.Mesh(new THREE.BoxGeometry(0.08, billH + 0.16, billW + 0.16), bkMat);
+    backing.position.set(billX - 0.05, billY, billZ);
+    this.scene.add(backing);
+
+    // Structural mounting struts securing the board to the entrance roof columns
+    [-2.7, 2.7].forEach(sz => {
+      const strutMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.85 });
+      const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.9, 8), strutMat);
+      strut.position.set(billX - 0.05, billY - billH / 2 - 0.45, billZ + sz);
+      this.scene.add(strut);
+    });
+
+    // -------------------------------------------------------
+    // GLOWING LIGHT EFFECTS AROUND THE BOARD
+    // -------------------------------------------------------
+    const mkStrip = (geo, pos) => {
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
+      m.position.set(...pos);
+      this.scene.add(m);
+      return m;
+    };
+    // Position perimeter strips slightly in front of the board frame (billX + 0.01)
+    const topStrip  = mkStrip(new THREE.BoxGeometry(0.04, 0.05, billW + 0.14), [billX + 0.01, billY + billH/2 + 0.05, billZ]);
+    const botStrip  = mkStrip(new THREE.BoxGeometry(0.04, 0.05, billW + 0.14), [billX + 0.01, billY - billH/2 - 0.05, billZ]);
+    const leftStrip = mkStrip(new THREE.BoxGeometry(0.04, billH + 0.14, 0.05), [billX + 0.01, billY, billZ - billW/2 - 0.05]);
+    const rgtStrip  = mkStrip(new THREE.BoxGeometry(0.04, billH + 0.14, 0.05), [billX + 0.01, billY, billZ + billW/2 + 0.05]);
+
+    // 4 corner point lights — pulsing vibrant multi-color glowing lights
+    const cLights = [
+      new THREE.PointLight(0x00f5ff, 4.0, 7.0),
+      new THREE.PointLight(0xe040fb, 4.0, 7.0),
+      new THREE.PointLight(0x38bdf8, 4.0, 7.0),
+      new THREE.PointLight(0xa855f7, 4.0, 7.0),
+    ];
+    const cPos = [
+      [billX + 0.1, billY + billH/2, billZ - billW/2],
+      [billX + 0.1, billY + billH/2, billZ + billW/2],
+      [billX + 0.1, billY - billH/2, billZ - billW/2],
+      [billX + 0.1, billY - billH/2, billZ + billW/2],
+    ];
+    cLights.forEach((cl, i) => {
+      cl.position.set(...cPos[i]);
+      this.scene.add(cl);
+    });
+
+    // Front-face wash light illuminating the board from the plaza side
+    const boardWashLight = new THREE.PointLight(0x00f5ff, 5.0, 9.0);
+    boardWashLight.position.set(billX + 2.4, billY, billZ);
+    this.scene.add(boardWashLight);
+
+    // Welcoming doorway downlight shining onto the entrance threshold
+    const entranceDownlight = new THREE.PointLight(0x38bdf8, 4.5, 7.5);
+    entranceDownlight.position.set(billX + 0.3, 4.9, billZ);
+    this.scene.add(entranceDownlight);
+
+    // Animate: dynamic rainbow / cyan-magenta sweep across perimeter strips & pulsing corner glow
+    let signHue = 0;
+    this.animatedObjects.push({
+      update: (dt) => {
+        signHue = (signHue + dt * 0.14) % 1.0;
+        const pulse = 0.5 + Math.sin(Date.now() * 0.0025) * 0.5;
+        [topStrip, botStrip, leftStrip, rgtStrip].forEach((s, i) => {
+          s.material.color.setHSL((signHue + i * 0.25) % 1.0, 1.0, 0.55);
+        });
+        cLights.forEach((cl, i) => {
+          cl.color.setHSL((signHue + i * 0.25) % 1.0, 1.0, 0.55);
+          cl.intensity = 3.5 + pulse * 2.2;
+        });
+        boardWashLight.intensity = 4.5 + Math.sin(Date.now() * 0.002) * 1.5;
+        entranceDownlight.intensity = 4.0 + pulse * 1.0;
+      }
+    });
+
+    // -------------------------------------------------------
+    // EXTERIOR PLAZA APPROACH CHEVRONS — guiding player from plaza towards entrance
+    // Approaching from plaza (x = -10, -13, -16) towards entrance (-20.8)
+    // -------------------------------------------------------
+    const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+    [3.0, 5.5, 8.0, 10.5].forEach(offset => {
+      const arrowGeo = new THREE.PlaneGeometry(0.85, 1.6);
+      arrowGeo.rotateX(-Math.PI / 2);
+      // Rotate 90 deg so chevron points in -X direction towards entrance
+      arrowGeo.rotateZ(Math.PI / 2);
+      const arrowPlane = new THREE.Mesh(arrowGeo, arrowMat);
+      arrowPlane.position.set(extEntranceX + offset, 0.095, hz);
+      this.scene.add(arrowPlane);
+
+      // Path guide light
+      const pathLight = new THREE.PointLight(0x00d4ff, 1.8, 3.5);
+      pathLight.position.set(extEntranceX + offset, 0.35, hz);
+      this.scene.add(pathLight);
+    });
+
+    // Pair of tall entrance beacon pylons flanking the doorway
+    const beaconMat = new THREE.MeshStandardMaterial({ color: 0x0d1b2e, roughness: 0.2, metalness: 0.9 });
+    const beaconGlowMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+    [-2.8, 2.8].forEach(sz => {
+      const bPylon = new THREE.Mesh(new THREE.BoxGeometry(0.18, 3.2, 0.18), beaconMat);
+      bPylon.position.set(extEntranceX + 0.08, 1.6, hz + sz);
+      this.scene.add(bPylon);
+
+      const bGlow = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.6, 0.06), beaconGlowMat);
+      bGlow.position.set(extEntranceX + 0.08, 1.6, hz + sz);
+      this.scene.add(bGlow);
+
+      const bLight = new THREE.PointLight(0x00d4ff, 3.5, 6.0);
+      bLight.position.set(extEntranceX + 0.5, 1.6, hz + sz);
+      this.scene.add(bLight);
+    });
+
+    // Studio Sign above entrance (interior side)
     const studioSign = this.createNeonSignMesh(6.2, 1.1, "EXECUTIVE STUDIO", "SYSTEMS ARCHITECTURE // MOULI", "#38bdf8");
     studioSign.position.set(hx + 7.35, 4.4, hz);
     studioSign.rotation.y = -Math.PI / 2;
@@ -585,21 +1030,6 @@ export class WorldBuilder {
       new THREE.Vector3(hx - 1.4, 2.6, hz + 1.0)
     ));
 
-    // Ultra-Wide Curved Panoramic Studio Display
-    const displayGeo = new THREE.CylinderGeometry(2.2, 2.2, 0.8, 24, 1, true, -Math.PI / 6, Math.PI / 3);
-    const displayMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      side: THREE.DoubleSide
-    });
-    const curvedDisplay = new THREE.Mesh(displayGeo, displayMat);
-    curvedDisplay.position.set(hx - 3.2, 1.7, hz - 0.35);
-    curvedDisplay.rotation.y = Math.PI;
-    this.scene.add(curvedDisplay);
-
-    // Architectural Task Lamp Bar
-    const lampBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.08), this.materials.neonCyan);
-    lampBar.position.set(hx - 3.2, 2.15, hz - 0.2);
-    this.scene.add(lampBar);
 
     // Executive Milestone Credenza / Showcase Shelf
     const credenzaGeo = new THREE.BoxGeometry(4.2, 1.8, 0.8);
@@ -626,100 +1056,301 @@ export class WorldBuilder {
       });
     }
 
-    // Interactive Executive Console
-    this.addInteractable({
-      id: "house-terminal",
-      name: "Architect Console",
-      type: "terminal",
-      position: new THREE.Vector3(hx - 3.2, 1.2, hz),
-      radius: 2.8,
-      prompt: "ACCESS ARCHITECT CONSOLE"
-    });
+    // BOLT ROBOT — seated at the desk, operating the workstation (Mouli)
+    this.buildSeatedBoltAtDesk(hx - 3.2, hz);
 
-    // NPC MOULI (Distinguished Tech Lead Avatar)
-    this.buildMouliNPC(hx - 1.0, hz + 0.6);
+    // Interactive Operating Robot (Mouli)
+    this.addInteractable({
+      id: 'npc-mouli',
+      name: 'Mouli (Architect)',
+      type: 'npc',
+      position: new THREE.Vector3(hx - 3.2, 1.2, hz + 0.8),
+      radius: 3.8,
+      prompt: 'TALK WITH MOULI'
+    });
   }
 
-  buildMouliNPC(x, z) {
-    const npcGroup = new THREE.Group();
-    npcGroup.position.set(x, 0, z);
+  buildSeatedBoltAtDesk(deskX, deskZ) {
+    const dark = new THREE.MeshStandardMaterial({ color: 0x0d1520, roughness: 0.4, metalness: 0.7 });
+    const cushionMat = new THREE.MeshStandardMaterial({ color: 0x1a2540, roughness: 0.8, metalness: 0.1 });
+    const metalLight = new THREE.MeshStandardMaterial({ color: 0x2a3a50, roughness: 0.3, metalness: 0.9 });
 
-    // NPC Cyber Robe / Grand Architect Coat (Luminous Royal Cobalt with Golden Trims)
-    const bodyGeo = new THREE.CylinderGeometry(0.3, 0.42, 1.4, 8);
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x2563eb, // Radiant Royal Blue
-      roughness: 0.25,
-      metalness: 0.6
+    // -------------------------------------------------------
+    // CHAIR — moved comfortably backward from desk
+    // -------------------------------------------------------
+    const chairZ = deskZ + 1.15; // chair center Z (comfortable typing distance)
+
+    // Seat cushion
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.09, 0.9), cushionMat);
+    seat.position.set(deskX, 0.82, chairZ);
+    seat.castShadow = true;
+    this.scene.add(seat);
+
+    // Seat back cushion
+    const seatBack = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.25, 0.09), cushionMat);
+    seatBack.position.set(deskX, 1.45, chairZ + 0.44);
+    seatBack.castShadow = true;
+    this.scene.add(seatBack);
+
+    // Vertical back support
+    const backPost = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.3, 0.07), dark);
+    backPost.position.set(deskX, 1.45, chairZ + 0.47);
+    this.scene.add(backPost);
+
+    // Gas-lift stem
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.82, 8), dark);
+    stem.position.set(deskX, 0.41, chairZ);
+    this.scene.add(stem);
+
+    // 5-star base arms
+    [0, 72, 144, 216, 288].forEach(deg => {
+      const rad = (deg * Math.PI) / 180;
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.82, 6), dark);
+      arm.position.set(deskX + Math.cos(rad) * 0.38, 0.05, chairZ + Math.sin(rad) * 0.38);
+      arm.rotation.z = Math.cos(rad) * 0.32;
+      arm.rotation.x = Math.sin(rad) * 0.32;
+      this.scene.add(arm);
     });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 1.0;
-    body.castShadow = true;
-    npcGroup.add(body);
 
-    // Golden Mantle / Collar
-    const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.38, 0.25, 8), this.materials.gold);
-    collar.position.y = 1.6;
-    npcGroup.add(collar);
-
-    // NPC Head with Sleek Titanium Mask & Cyan Visor
-    const headGeo = new THREE.BoxGeometry(0.38, 0.38, 0.38);
-    const headMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0, // Titanium silver head
-      roughness: 0.2,
-      metalness: 0.8
+    // Armrests (under robot elbows)
+    [-0.46, 0.46].forEach(sx => {
+      const ar = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 0.55), dark);
+      ar.position.set(deskX + sx, 1.02, chairZ);
+      this.scene.add(ar);
     });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.9;
-    npcGroup.add(head);
 
-    const visorGeo = new THREE.BoxGeometry(0.36, 0.12, 0.1);
-    const visor = new THREE.Mesh(visorGeo, this.materials.neonCyan);
-    visor.position.set(0, 0.04, 0.2);
-    head.add(visor);
+    // -------------------------------------------------------
+    // MONITOR — standalone desktop display facing robot at eye-level
+    // -------------------------------------------------------
+    const monitorZ = deskZ - 0.15; // on desk in front of robot
 
-    // Holographic Halo / Creator Emblem (Radiant Golden Aura)
-    const haloGeo = new THREE.TorusGeometry(0.38, 0.03, 8, 24);
-    const halo = new THREE.Mesh(haloGeo, this.materials.neonAmber);
-    halo.rotation.x = Math.PI / 2;
-    halo.position.y = 2.28;
-    npcGroup.add(halo);
+    // Monitor stand base
+    const monBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.04, 16), metalLight);
+    monBase.position.set(deskX, 1.17, monitorZ);
+    this.scene.add(monBase);
 
-    // Radiant NPC Aura Beacon Light
-    const npcLight = new THREE.PointLight(0x38bdf8, 4.0, 10);
-    npcLight.position.set(0, 2.2, 0);
-    npcGroup.add(npcLight);
+    // Monitor stand pole
+    const monPole = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.65, 8), dark);
+    monPole.position.set(deskX, 1.50, monitorZ);
+    this.scene.add(monPole);
 
-    // Facing direction
-    npcGroup.rotation.y = -Math.PI / 2;
+    // Monitor frame (sleek thin bezel)
+    const monFrame = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.05, 0.06), dark);
+    monFrame.position.set(deskX, 1.85, monitorZ);
+    this.scene.add(monFrame);
 
-    this.scene.add(npcGroup);
-    this.npc = npcGroup;
+    // Monitor screen (crisp emissive terminal code canvas)
+    const screenCanvas = document.createElement('canvas');
+    screenCanvas.width = 512;
+    screenCanvas.height = 300;
+    const sctx = screenCanvas.getContext('2d');
+    sctx.fillStyle = '#030d1d';
+    sctx.fillRect(0, 0, 512, 300);
+    // Grid lines
+    sctx.strokeStyle = 'rgba(56,189,248,0.12)';
+    sctx.lineWidth = 1;
+    for (let gx = 0; gx <= 512; gx += 32) { sctx.beginPath(); sctx.moveTo(gx,0); sctx.lineTo(gx,300); sctx.stroke(); }
+    for (let gy = 0; gy <= 300; gy += 32) { sctx.beginPath(); sctx.moveTo(0,gy); sctx.lineTo(512,gy); sctx.stroke(); }
+    // Code lines
+    const codeColors = ['#38bdf8','#818cf8','#10b981','#f59e0b', '#38bdf8', '#a78bfa', '#34d399'];
+    const lines = [
+      '// ARCHITECT DEV CONSOLE v2.4',
+      '> SYSTEM.BOOT: OK',
+      '> Loading AI Core Engine...',
+      '  const dev = new Developer("Mouli");',
+      '  dev.role = "Senior Full-Stack Architect";',
+      '  dev.stack = ["React", "Three.js", "Node.js", "Docker"];',
+      '  dev.status = "DEPLOYING HIGH-PERFORMANCE WEB...";',
+      '> Compiling 3D scene shaders... 100%',
+      '> ALL SYSTEMS OPERATIONAL _'
+    ];
+    sctx.font = 'bold 15px monospace';
+    lines.forEach((line, i) => {
+      sctx.fillStyle = codeColors[i % codeColors.length];
+      sctx.fillText(line, 20, 36 + i * 26);
+    });
+    // Glowing cursor
+    sctx.fillStyle = '#38bdf8';
+    sctx.fillRect(20 + 205, 36 + (lines.length - 1) * 26 - 13, 8, 16);
+    const screenTex = new THREE.CanvasTexture(screenCanvas);
+    const monScreen = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.72, 0.97),
+      new THREE.MeshBasicMaterial({ map: screenTex, side: THREE.DoubleSide })
+    );
+    monScreen.position.set(deskX, 1.85, monitorZ + 0.035);
+    this.scene.add(monScreen);
 
-    // Animate idle breathing
-    let breathe = 0;
+    // Webcam mounted on top of monitor (like in reference photo)
+    const camMat = new THREE.MeshStandardMaterial({ color: 0x050811, roughness: 0.3, metalness: 0.8 });
+    const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.08), camMat);
+    camBody.position.set(deskX, 2.40, monitorZ + 0.02);
+    this.scene.add(camBody);
+    const camLens = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.02, 12), this.materials.neonCyan);
+    camLens.rotation.x = Math.PI / 2;
+    camLens.position.set(deskX, 2.40, monitorZ + 0.065);
+    this.scene.add(camLens);
+
+    // Screen glow light (illuminates robot face)
+    const screenGlow = new THREE.PointLight(0x38bdf8, 2.0, 3.8);
+    screenGlow.position.set(deskX, 1.85, monitorZ + 0.35);
+    this.scene.add(screenGlow);
+    this.animatedObjects.push({
+      update: (dt) => { screenGlow.intensity = 2.0 + Math.sin(Date.now() * 0.003) * 0.4; }
+    });
+
+    // -------------------------------------------------------
+    // DESKTOP PC TOWER — standing on desk (reference photo)
+    // -------------------------------------------------------
+    const pcMat = new THREE.MeshStandardMaterial({ color: 0x0c121e, roughness: 0.35, metalness: 0.85 });
+    const pcTower = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.72, 0.65), pcMat);
+    pcTower.position.set(deskX - 1.25, 1.51, monitorZ);
+    pcTower.castShadow = true;
+    this.scene.add(pcTower);
+
+    // PC front panel thin RGB LED vertical bar
+    const pcLed = new THREE.Mesh(
+      new THREE.BoxGeometry(0.015, 0.50, 0.02),
+      this.materials.neonCyan
+    );
+    pcLed.position.set(deskX - 1.25, 1.50, monitorZ + 0.33);
+    this.scene.add(pcLed);
+
+    // PC acrylic side panel window (tempered glass look)
+    const sideWindowMat = new THREE.MeshStandardMaterial({
+      color: 0x0a1a2e,
+      transparent: true,
+      opacity: 0.45,
+      roughness: 0.04,
+      metalness: 0.85
+    });
+    const sideWindow = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.58, 0.50), sideWindowMat);
+    sideWindow.position.set(deskX - 1.25 + 0.165, 1.51, monitorZ);
+    this.scene.add(sideWindow);
+
+    // RGB LED strip inside case — horizontal bar visible through acrylic
+    const rgbStripMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc });
+    const rgbStrip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.03, 0.42), rgbStripMat);
+    rgbStrip.position.set(deskX - 1.25 + 0.15, 1.72, monitorZ);
+    this.scene.add(rgbStrip);
+
+    const rgbStrip2 = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.03, 0.42), new THREE.MeshBasicMaterial({ color: 0xff00aa }));
+    rgbStrip2.position.set(deskX - 1.25 + 0.15, 1.28, monitorZ);
+    this.scene.add(rgbStrip2);
+
+    // Rear exhaust fan ring (visible from behind case)
+    const fanRingMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+    const fanRing = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.02, 8, 16), fanRingMat);
+    fanRing.rotation.y = Math.PI / 2;
+    fanRing.position.set(deskX - 1.25 - 0.165, 1.65, monitorZ);
+    this.scene.add(fanRing);
+
+    // Animated RGB point light — breathing rainbow effect inside PC case
+    const pcRgbLight = new THREE.PointLight(0x00ffcc, 3.5, 2.8);
+    pcRgbLight.position.set(deskX - 1.25, 1.51, monitorZ);
+    this.scene.add(pcRgbLight);
+
+    // Top case ventilation glow
+    const topVentGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.01, 0.06),
+      new THREE.MeshBasicMaterial({ color: 0x00ffcc })
+    );
+    topVentGlow.position.set(deskX - 1.25, 1.875, monitorZ - 0.10);
+    this.scene.add(topVentGlow);
+
+    // Animated: cycling RGB hue through the case light and strips
+    let rgbHue = 0;
     this.animatedObjects.push({
       update: (dt) => {
-        breathe += dt * 2.0;
-        head.position.y = 1.9 + Math.sin(breathe) * 0.02;
-        halo.rotation.z += dt * 0.8;
+        rgbHue = (rgbHue + dt * 0.18) % 1.0;
+        const c = new THREE.Color().setHSL(rgbHue, 1.0, 0.5);
+        const c2 = new THREE.Color().setHSL((rgbHue + 0.5) % 1.0, 1.0, 0.5);
+        pcRgbLight.color.copy(c);
+        pcRgbLight.intensity = 3.0 + Math.sin(Date.now() * 0.003) * 0.8;
+        rgbStrip.material.color.copy(c);
+        rgbStrip2.material.color.copy(c2);
+        fanRing.material.color.copy(c);
+        topVentGlow.material.color.copy(c);
       }
     });
 
-    // Add NPC Interactable
-    this.addInteractable({
-      id: "npc-mouli",
-      name: "Mouli",
-      type: "npc",
-      position: new THREE.Vector3(x, 1.2, z),
-      radius: 3.2,
-      prompt: "TALK TO MOULI"
-    });
+    // Goose-neck desk microphone (like in reference photo)
+    const micBase = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.02, 12), dark);
+    micBase.position.set(deskX - 0.45, 1.16, monitorZ + 0.35);
+    this.scene.add(micBase);
+    const micStem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.22, 6), metalLight);
+    micStem.position.set(deskX - 0.43, 1.27, monitorZ + 0.42);
+    micStem.rotation.x = -0.35;
+    this.scene.add(micStem);
+    const micHead = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), dark);
+    micHead.position.set(deskX - 0.43, 1.36, monitorZ + 0.46);
+    this.scene.add(micHead);
 
-    // NPC physical collision
-    this.addCollider(new THREE.Box3(
-      new THREE.Vector3(x - 0.7, 0, z - 0.7),
-      new THREE.Vector3(x + 0.7, 2.2, z + 0.7)
-    ));
+    // -------------------------------------------------------
+    // KEYBOARD — on desk where robot arms reach forward
+    // -------------------------------------------------------
+    const kbZ = deskZ + 0.66; // aligned with forward reaching hands
+    const kbMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.6 });
+    const keyboard = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.024, 0.30), kbMat);
+    keyboard.position.set(deskX, 1.162, kbZ);
+    keyboard.castShadow = true;
+    this.scene.add(keyboard);
+
+    // Key rows
+    const keyMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, emissive: 0x0a1628, emissiveIntensity: 0.5, roughness: 0.4, metalness: 0.3
+    });
+    const keyCyanMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 1.5, roughness: 0.2
+    });
+    const keyCols = 10, keyRows = 4;
+    for (let row = 0; row < keyRows; row++) {
+      for (let col = 0; col < keyCols; col++) {
+        const isAccent = (row === 0 && (col === 0 || col === keyCols - 1)) ||
+                         (row === keyRows - 1 && (col === 0 || col === 4 || col === 5));
+        const kGeo = new THREE.BoxGeometry(0.064, 0.016, 0.052);
+        const kMesh = new THREE.Mesh(kGeo, isAccent ? keyCyanMat : keyMat);
+        kMesh.position.set(
+          deskX - 0.34 + col * 0.076,
+          1.178,
+          kbZ - 0.09 + row * 0.06
+        );
+        this.scene.add(kMesh);
+      }
+    }
+
+    // Keyboard glow underneath
+    const kbGlow = new THREE.PointLight(0x38bdf8, 0.8, 1.5);
+    kbGlow.position.set(deskX, 1.15, kbZ);
+    this.scene.add(kbGlow);
+
+    // Mousepad & Gaming Mouse next to keyboard
+    const mousePadMat = new THREE.MeshStandardMaterial({ color: 0x0a0f1d, roughness: 0.9 });
+    const mousePad = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.005, 0.28), mousePadMat);
+    mousePad.position.set(deskX + 0.48, 1.153, kbZ);
+    this.scene.add(mousePad);
+
+    const mouseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.7 });
+    const mouse = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.024, 0.16), mouseMat);
+    mouse.position.set(deskX + 0.48, 1.165, kbZ);
+    this.scene.add(mouse);
+
+    const mouseLed = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.026, 0.10), keyCyanMat);
+    mouseLed.position.set(deskX + 0.48, 1.168, kbZ);
+    this.scene.add(mouseLed);
+
+    // -------------------------------------------------------
+    // SEATED BOLT ROBOT — seated with comfortable desk clearance
+    // -------------------------------------------------------
+    const robotY = 0.21;
+    const robotZ = deskZ + 1.05; // comfortably spaced back, arms reach to keys
+    this.seatedRobot = new BoltRobot(
+      this.scene,
+      { x: deskX, y: robotY, z: robotZ },
+      { seated: true }
+    );
+    // Face toward -Z (toward monitor / screen)
+    this.seatedRobot.root.rotation.y = Math.PI;
+    this.npc = this.seatedRobot.root;
   }
 
   buildProjectLab() {
@@ -1413,9 +2044,20 @@ export class WorldBuilder {
     });
   }
 
-  update(delta, time) {
+  update(delta, time, playerPos) {
     for (let i = 0; i < this.animatedObjects.length; i++) {
       this.animatedObjects[i].update(delta, time);
+    }
+    // Update seated Bolt robot at desk (typing, ambient)
+    if (this.seatedRobot) {
+      this.seatedRobot.update(delta);
+    }
+    // Update standing Bolt robot (if present) + player tracking
+    if (this.boltRobot) {
+      this.boltRobot.update(delta);
+      if (playerPos) {
+        this.boltRobot.lookAt(playerPos.x, playerPos.z);
+      }
     }
   }
 }
